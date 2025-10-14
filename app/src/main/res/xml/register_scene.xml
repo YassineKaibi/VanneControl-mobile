@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Etat initial : formulaire visible 3/4 bas -->
+    <ConstraintSet android:id="@+id/collapsed">
+        <Constraint
+            android:id="@id/formContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_default="percent"
+            app:layout_constraintHeight_percent="0.75"/>
+    </ConstraintSet>
+
+    <!-- Etat final : formulaire tout en bas -->
+    <ConstraintSet android:id="@+id/expanded">
+        <Constraint
+            android:id="@id/formContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_height="wrap_content"/>
+    </ConstraintSet>
+
+    <!-- Transition : glisser vers le bas uniquement -->
+    <Transition
+        app:constraintSetStart="@id/collapsed"
+        app:constraintSetEnd="@id/expanded"
+        app:motionInterpolator="easeInOut">
+        <OnSwipe
+            app:touchAnchorId="@id/formContainer"
+            app:dragDirection="dragDown"
+            app:touchAnchorSide="top"/>
+    </Transition>
+</MotionScene>
