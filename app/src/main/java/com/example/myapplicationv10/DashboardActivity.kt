@@ -62,10 +62,8 @@ class DashboardActivity : AppCompatActivity() {
     private fun setupNavigationButtons() {
         // Valve Control Button
         findViewById<CardView>(R.id.valveControlCard).setOnClickListener {
-            // TODO: Create ValveControlActivity
-            Snackbar.make(it, "Opening Valve Control...", Snackbar.LENGTH_SHORT).show()
-            // val intent = Intent(this, ValveControlActivity::class.java)
-            // startActivity(intent)
+            val intent = Intent(this, ValveManagementActivity::class.java)
+            startActivity(intent)
         }
 
         // History Button
