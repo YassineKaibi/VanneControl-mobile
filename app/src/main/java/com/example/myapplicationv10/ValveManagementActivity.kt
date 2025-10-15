@@ -57,19 +57,22 @@ class ValveManagementActivity : AppCompatActivity() {
         for (i in 1..8) {
             val valve = valves[i - 1]
             val cardId = resources.getIdentifier("valve${i}Card", "id", packageName)
-            val card = findViewById<CardView>(cardId)
+            val iconId = resources.getIdentifier("valve${i}Icon", "id", packageName)
 
-            // Définir la couleur initiale
-            updateValveColor(card, valve.isOpen)
+            val card = findViewById<CardView>(cardId)
+            val icon = findViewById<ImageView>(iconId)
+
+            // Définir la couleur et l'icône initiale
+            updateValveAppearance(card, icon, valve.isOpen)
 
             // Gérer le clic
             card.setOnClickListener {
-                showConfirmationDialog(valve, card)
+                showConfirmationDialog(valve, card, icon)
             }
         }
     }
 
-    private fun showConfirmationDialog(valve: Valve, card: CardView) {
+    private fun showConfirmationDialog(valve: Valve, card: CardView, icon: ImageView) {
         val action = if (valve.isOpen) "fermer" else "ouvrir"
         val actionCapital = if (valve.isOpen) "Fermer" else "Ouvrir"
 
@@ -77,18 +80,18 @@ class ValveManagementActivity : AppCompatActivity() {
             .setTitle("Confirmation")
             .setMessage("Voulez-vous vraiment $action ${valve.name} ?")
             .setPositiveButton("Oui") { _, _ ->
-                toggleValve(valve, card)
+                toggleValve(valve, card, icon)
             }
             .setNegativeButton("Annuler", null)
             .show()
     }
 
-    private fun toggleValve(valve: Valve, card: CardView) {
+    private fun toggleValve(valve: Valve, card: CardView, icon: ImageView) {
         // Changer l'état de la valve
         valve.isOpen = !valve.isOpen
 
-        // Mettre à jour la couleur
-        updateValveColor(card, valve.isOpen)
+        // Mettre à jour la couleur et l'icône
+        updateValveAppearance(card, icon, valve.isOpen)
 
         // Afficher un message de confirmation
         val status = if (valve.isOpen) "ouverte ✅" else "fermée ❌"
@@ -99,13 +102,16 @@ class ValveManagementActivity : AppCompatActivity() {
         // sendValveCommand(valve.id, valve.isOpen)
     }
 
-    private fun updateValveColor(card: CardView, isOpen: Boolean) {
-        val color = if (isOpen) {
-            getColor(R.color.green)  // Vert = ouverte
+    private fun updateValveAppearance(card: CardView, icon: ImageView, isOpen: Boolean) {
+        if (isOpen) {
+            // Valve ouverte: vert avec toggle ON
+            card.setCardBackgroundColor(getColor(R.color.green))
+            icon.setImageResource(R.drawable.ic_toggle_on)
         } else {
-            getColor(android.R.color.holo_red_light)  // Rouge = fermée
+            // Valve fermée: rouge avec toggle OFF
+            card.setCardBackgroundColor(getColor(android.R.color.holo_red_light))
+            icon.setImageResource(R.drawable.ic_toggle_off)
         }
-        card.setCardBackgroundColor(color)
     }
 
     // Fonction pour envoyer la commande (à implémenter plus tard)
