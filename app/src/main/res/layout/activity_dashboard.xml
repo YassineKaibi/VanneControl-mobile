@@ -22,16 +22,15 @@
 
         <!-- App Slogan - Left -->
         <TextView
-            android:id="@+id/appSlogan"
+            android:id="@+id/welcome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="VanneControl"
+            android:text="Welcome to "
             android:textColor="@color/black"
-            android:textSize="20sp"
+            android:textSize="28sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Profile Icon - Right -->
         <ImageView
@@ -45,6 +44,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Control Panel"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/welcome" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -67,7 +78,7 @@
                 android:id="@+id/activeValvesTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Currently Active Valves"
+                android:text="Active Valves"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -95,20 +106,20 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- Features Title -->
+            <!-- Control Modules Title -->
             <TextView
-                android:id="@+id/featuresTitle"
+                android:id="@+id/ControlModulesTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="Features"
+                android:text="Control Modules"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintTop_toBottomOf="@id/activeValvesCard"
                 app:layout_constraintStart_toStartOf="parent" />
 
-            <!-- Valve Control Button -->
+            <!-- Valve Control Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/valveControlCard"
                 android:layout_width="0dp"
@@ -119,7 +130,7 @@
                 android:foreground="?android:attr/selectableItemBackground"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:layout_constraintTop_toBottomOf="@id/featuresTitle"
+                app:layout_constraintTop_toBottomOf="@id/ControlModulesTitle"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
@@ -148,7 +159,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Valve Control"
+                            android:text="Valve Management"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -156,7 +167,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Manage all valves"
+                            android:text="Full valve management"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
@@ -173,7 +184,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- History Button -->
+            <!-- History Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/historyCard"
                 android:layout_width="0dp"
@@ -213,7 +224,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Activity History"
+                            android:text="Valve Operation History"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -221,7 +232,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="View valve activation history"
+                            android:text="Detailed valve activation logs"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
@@ -238,7 +249,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- Statistics Button -->
+            <!-- Statistics Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/statisticsCard"
                 android:layout_width="0dp"
@@ -278,7 +289,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Statistics"
+                            android:text="Usage Statistics"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -286,7 +297,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="View valve usage statistics"
+                            android:text="Detailed valve usage reports"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
@@ -303,13 +314,12 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- Notifications Button -->
+            <!-- Notifications Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/notificationsCard"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:layout_marginBottom="20dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
@@ -345,7 +355,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Notifications"
+                            android:text="Alerts &amp; Notifications"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -353,7 +363,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="View telemetry and alerts"
+                            android:text="Review system telemetry and alerts"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
