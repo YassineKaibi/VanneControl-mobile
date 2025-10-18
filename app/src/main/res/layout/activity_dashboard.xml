@@ -172,7 +172,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_chevron_right"
                         android:contentDescription="Arrow" />
 
                 </LinearLayout>
@@ -205,7 +205,7 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:background="@drawable/button_default"
+                        android:background="@drawable/ic_calendar"
                         android:padding="8dp"
                         android:contentDescription="History" />
 
@@ -237,7 +237,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_chevron_right"
                         android:contentDescription="Arrow" />
 
                 </LinearLayout>
@@ -270,7 +270,7 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:background="@drawable/button_default"
+                        android:background="@drawable/ic_bar_chart"
                         android:padding="8dp"
                         android:contentDescription="Statistics" />
 
@@ -302,7 +302,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_chevron_right"
                         android:contentDescription="Arrow" />
 
                 </LinearLayout>
@@ -336,7 +336,7 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:background="@drawable/button_default"
+                        android:background="@drawable/ic_notifications"
                         android:padding="8dp"
                         android:contentDescription="Notifications" />
 
@@ -368,7 +368,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_chevron_right"
                         android:contentDescription="Arrow" />
 
                 </LinearLayout>
