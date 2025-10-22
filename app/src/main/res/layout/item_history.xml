@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Status Indicator (colored line on the left) -->
+        <View
+            android:id="@+id/statusIndicator"
+            android:layout_width="4dp"
+            android:layout_height="0dp"
+            android:background="@color/green"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Valve Icon -->
+        <ImageView
+            android:id="@+id/valveIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_toggle_on"
+            android:background="@drawable/button_default"
+            android:padding="8dp"
+            android:layout_marginStart="12dp"
+            android:contentDescription="Valve State"
+            app:layout_constraintStart_toEndOf="@id/statusIndicator"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Valve Name -->
+        <TextView
+            android:id="@+id/valveName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Valve 1"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp"
+            app:layout_constraintStart_toEndOf="@id/valveIcon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Action Text -->
+        <TextView
+            android:id="@+id/actionText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Opened"
+            android:textColor="@color/green"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toStartOf="@id/valveName"
+            app:layout_constraintTop_toBottomOf="@id/valveName" />
+
+        <!-- Timestamp -->
+        <TextView
+            android:id="@+id/timestampText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="21/10/2025 14:30"
+            android:textColor="#666666"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toStartOf="@id/valveName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/actionText" />
+
+        <!-- User -->
+        <TextView
+            android:id="@+id/userText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Par: Admin"
+            android:textColor="#999999"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp"
+            app:layout_constraintStart_toStartOf="@id/valveName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/timestampText" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

@@ -10,6 +10,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplicationV10">
 
+        <!-- History Activity -->
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+
         <!-- Valve Management Activity -->
         <activity
             android:name=".ValveManagementActivity"
