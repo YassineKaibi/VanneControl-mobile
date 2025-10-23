@@ -1,8 +1,8 @@
 package com.example.myapplicationv10
 
-import android.content.Intent        // <- IMPORT MANQUANT
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Button        // <- IMPORT MANQUANT
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
