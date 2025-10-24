@@ -48,5 +48,7 @@ dependencies {
 
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
+    // MPAndroidChart for statistics graphs
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 }

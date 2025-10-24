@@ -66,18 +66,18 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // History Button - MISE À JOUR ICI
+        // History Button
         findViewById<CardView>(R.id.historyCard).setOnClickListener {
-            val intent = Intent(this, HistoryActivity::class.java)
-            startActivity(intent)
+            // TODO: Create HistoryActivity
+            Snackbar.make(it, "Opening History...", Snackbar.LENGTH_SHORT).show()
+            // val intent = Intent(this, HistoryActivity::class.java)
+            // startActivity(intent)
         }
 
         // Statistics Button
         findViewById<CardView>(R.id.statisticsCard).setOnClickListener {
-            // TODO: Create StatisticsActivity
-            Snackbar.make(it, "Opening Statistics...", Snackbar.LENGTH_SHORT).show()
-            // val intent = Intent(this, StatisticsActivity::class.java)
-            // startActivity(intent)
+            val intent = Intent(this, StatisticsActivity::class.java)
+            startActivity(intent)
         }
 
         // Notifications Button
