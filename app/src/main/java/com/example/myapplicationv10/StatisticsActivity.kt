@@ -25,6 +25,7 @@ class StatisticsActivity : AppCompatActivity() {
     private lateinit var lineChart: LineChart
     private lateinit var periodSpinner: Spinner
     private lateinit var exportButton: Button
+    private lateinit var valveChipsContainer: LinearLayout
 
     // Statistics Cards
     private lateinit var totalValvesText: TextView
@@ -32,11 +33,17 @@ class StatisticsActivity : AppCompatActivity() {
     private lateinit var inactiveValvesText: TextView
     private lateinit var maintenanceValvesText: TextView
 
+    // Track which valves are selected for display (all selected by default)
+    private val selectedValves = mutableSetOf(1, 2, 3, 4, 5, 6, 7, 8)
+
     // Sample data
     private var totalValves = 8
     private var activeValves = 4
     private var inactiveValves = 3
     private var maintenanceValves = 1
+
+    // Current period
+    private var currentPeriod = "Last 24 hours"
 
     // Period types
     private val periods = arrayOf(
@@ -46,6 +53,18 @@ class StatisticsActivity : AppCompatActivity() {
         "Last 3 months",
         "Last year",
         "Custom range"
+    )
+
+    // Valve colors matching the chart
+    private val valveColors = listOf(
+        Color.parseColor("#FF5252"),  // Red
+        Color.parseColor("#156f35"),  // Green
+        Color.parseColor("#FF9800"),  // Orange
+        Color.parseColor("#2196F3"),  // Blue
+        Color.parseColor("#E91E63"),  // Pink
+        Color.parseColor("#91BC21"),  // Lime
+        Color.parseColor("#9C27B0"),  // Purple
+        Color.parseColor("#00BCD4")   // Cyan
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,16 +80,18 @@ class StatisticsActivity : AppCompatActivity() {
         initializeViews()
         setupBackButton()
         setupStatisticsCards()
+        setupValveChips()
         setupPeriodSpinner()
         setupExportButton()
         setupLineChart()
-        loadChartData("Last 24 hours")
+        loadChartData(currentPeriod)
     }
 
     private fun initializeViews() {
         lineChart = findViewById(R.id.activationsChart)
         periodSpinner = findViewById(R.id.periodSpinner)
         exportButton = findViewById(R.id.exportPdfButton)
+        valveChipsContainer = findViewById(R.id.valveChipsContainer)
 
         totalValvesText = findViewById(R.id.totalValvesValue)
         activeValvesText = findViewById(R.id.activeValvesValue)
@@ -91,6 +112,142 @@ class StatisticsActivity : AppCompatActivity() {
         maintenanceValvesText.text = maintenanceValves.toString()
     }
 
+    private fun setupValveChips() {
+        valveChipsContainer.removeAllViews()
+
+        // Add individual valve chips
+        for (i in 1..8) {
+            val chip = createValveChip(i, valveColors[i - 1])
+            valveChipsContainer.addView(chip)
+        }
+
+        // Add "Select All" button
+        valveChipsContainer.addView(createSelectAllButton())
+
+        // Add "Deselect All" button
+        valveChipsContainer.addView(createDeselectAllButton())
+    }
+
+    private fun createValveChip(valveNumber: Int, color: Int): TextView {
+        return TextView(this).apply {
+            text = "Valve $valveNumber"
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(24, 16, 24, 16)
+
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(8, 8, 8, 8)
+            }
+            layoutParams = params
+
+            // Set initial appearance (all selected by default)
+            background = createChipBackground(color, true)
+
+            // Click listener to toggle selection
+            setOnClickListener {
+                if (selectedValves.contains(valveNumber)) {
+                    // Deselect
+                    selectedValves.remove(valveNumber)
+                    background = createChipBackground(color, false)
+                    setTextColor(color) // Change text color to match border
+                } else {
+                    // Select
+                    selectedValves.add(valveNumber)
+                    background = createChipBackground(color, true)
+                    setTextColor(Color.WHITE) // White text on solid background
+                }
+                // Reload chart with new selection
+                loadChartData(currentPeriod)
+            }
+        }
+    }
+
+    private fun createSelectAllButton(): TextView {
+        return TextView(this).apply {
+            text = "✓ All"
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(24, 16, 24, 16)
+
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(8, 8, 8, 8)
+            }
+            layoutParams = params
+
+            background = createChipBackground(Color.parseColor("#4CAF50"), true)
+
+            setOnClickListener {
+                selectedValves.clear()
+                selectedValves.addAll(1..8)
+                updateAllChipsAppearance(true)
+                loadChartData(currentPeriod)
+            }
+        }
+    }
+
+    private fun createDeselectAllButton(): TextView {
+        return TextView(this).apply {
+            text = "✗ None"
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(24, 16, 24, 16)
+
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(8, 8, 8, 8)
+            }
+            layoutParams = params
+
+            background = createChipBackground(Color.parseColor("#FF5252"), true)
+
+            setOnClickListener {
+                selectedValves.clear()
+                updateAllChipsAppearance(false)
+                loadChartData(currentPeriod)
+            }
+        }
+    }
+
+    private fun createChipBackground(color: Int, isSelected: Boolean): android.graphics.drawable.GradientDrawable {
+        return android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+            cornerRadius = 50f
+            if (isSelected) {
+                setColor(color)
+            } else {
+                setColor(Color.TRANSPARENT)
+                setStroke(6, color)
+            }
+        }
+    }
+
+    private fun updateAllChipsAppearance(selected: Boolean) {
+        // Update appearance of valve chips (first 8 children)
+        for (i in 0 until 8) {
+            val chip = valveChipsContainer.getChildAt(i) as? TextView
+            chip?.let {
+                val color = valveColors[i]
+                it.background = createChipBackground(color, selected)
+                if (selected) {
+                    it.setTextColor(Color.WHITE) // White text on solid background
+                } else {
+                    it.setTextColor(color) // Colored text on transparent background
+                }
+            }
+        }
+    }
+
     private fun setupPeriodSpinner() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, periods)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -99,6 +256,7 @@ class StatisticsActivity : AppCompatActivity() {
         periodSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedPeriod = periods[position]
+                currentPeriod = selectedPeriod
                 if (selectedPeriod == "Custom range") {
                     showCustomDateRangePicker()
                 } else {
@@ -231,38 +389,40 @@ class StatisticsActivity : AppCompatActivity() {
     ) {
         val dataSets = mutableListOf<LineDataSet>()
 
-        // Bright and vibrant colors with red accents
-        val colors = listOf(
-            Color.parseColor("#FF5252"),  // Bright Red - Valve 1
-            Color.parseColor("#156f35"),  // Green - Valve 2
-            Color.parseColor("#FF9800"),  // Bright Orange - Valve 3
-            Color.parseColor("#2196F3"),  // Bright Blue - Valve 4
-            Color.parseColor("#E91E63"),  // Pink/Magenta - Valve 5
-            Color.parseColor("#91BC21"),  // Lime Green - Valve 6
-            Color.parseColor("#9C27B0"),  // Purple - Valve 7
-            Color.parseColor("#00BCD4")   // Cyan - Valve 8
-        )
-
         entries.entries.forEachIndexed { index, (valveName, data) ->
-            val dataSet = LineDataSet(data, valveName)
-            dataSet.color = colors[index % colors.size]
-            dataSet.setCircleColor(colors[index % colors.size])
-            dataSet.lineWidth = 3f
-            dataSet.circleRadius = 4f
-            dataSet.setDrawCircleHole(true)
-            dataSet.circleHoleColor = Color.WHITE
-            dataSet.circleHoleRadius = 2f
-            dataSet.valueTextSize = 0f
-            dataSet.setDrawValues(false)
-            dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
-            dataSet.cubicIntensity = 0.2f
+            val valveNumber = index + 1
 
-            // Add fill for more visual impact
-            dataSet.setDrawFilled(true)
-            dataSet.fillAlpha = 30
-            dataSet.fillColor = colors[index % colors.size]
+            // Only add data for selected valves
+            if (selectedValves.contains(valveNumber)) {
+                val dataSet = LineDataSet(data, valveName)
+                dataSet.color = valveColors[index % valveColors.size]
+                dataSet.setCircleColor(valveColors[index % valveColors.size])
+                dataSet.lineWidth = 3f
+                dataSet.circleRadius = 4f
+                dataSet.setDrawCircleHole(true)
+                dataSet.circleHoleColor = Color.WHITE
+                dataSet.circleHoleRadius = 2f
+                dataSet.valueTextSize = 0f
+                dataSet.setDrawValues(false)
+                dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
+                dataSet.cubicIntensity = 0.2f
 
-            dataSets.add(dataSet)
+                // Add fill for more visual impact
+                dataSet.setDrawFilled(true)
+                dataSet.fillAlpha = 30
+                dataSet.fillColor = valveColors[index % valveColors.size]
+
+                dataSets.add(dataSet)
+            }
+        }
+
+        // Handle empty selection
+        if (dataSets.isEmpty()) {
+            lineChart.clear()
+            lineChart.setNoDataText("Veuillez sélectionner au moins une vanne")
+            lineChart.setNoDataTextColor(ContextCompat.getColor(this, R.color.black))
+            lineChart.invalidate()
+            return
         }
 
         val lineData = LineData(dataSets as List<LineDataSet>)
@@ -293,7 +453,6 @@ class StatisticsActivity : AppCompatActivity() {
     }
 
     private fun showCustomDateRangePicker() {
-        // TODO: Implement custom date range picker
         Snackbar.make(
             findViewById(R.id.main),
             "Custom date range picker - Coming soon",
@@ -305,18 +464,10 @@ class StatisticsActivity : AppCompatActivity() {
     }
 
     private fun exportToPdf() {
-        // TODO: Implement PDF export functionality
         Snackbar.make(
             findViewById(R.id.main),
             "Exporting statistics to PDF...",
             Snackbar.LENGTH_SHORT
         ).show()
-
-        // In a real implementation, you would:
-        // 1. Create a PDF document
-        // 2. Add statistics cards data
-        // 3. Add chart as image
-        // 4. Save to device storage
-        // 5. Share or open the PDF
     }
 }

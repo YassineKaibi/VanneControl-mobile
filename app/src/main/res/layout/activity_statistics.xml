@@ -111,8 +111,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="6dp"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="3dp"
-                    android:background="#257734">
+                    app:cardElevation="3dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -272,6 +271,66 @@
                 app:layout_constraintTop_toBottomOf="@id/statsCardsGrid"
                 app:layout_constraintStart_toStartOf="parent" />
 
+            <!-- Valve Selection Section -->
+            <TextView
+                android:id="@+id/valveSelectionTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="📊 Sélectionner les vannes à visualiser"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@id/chartTitle"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <!-- Valve Chips Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/valveSelectionCard"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:layout_constraintTop_toBottomOf="@id/valveSelectionTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡 Appuyez sur une vanne pour l'activer/désactiver"
+                        android:textColor="#666666"
+                        android:textSize="13sp"
+                        android:textStyle="italic"
+                        android:layout_marginBottom="12dp" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:id="@+id/valveChipsContainer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <!-- Chips will be added programmatically -->
+                        </LinearLayout>
+
+                    </HorizontalScrollView>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
             <!-- Period Selector -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/periodCard"
@@ -280,7 +339,7 @@
                 android:layout_marginTop="12dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:layout_constraintTop_toBottomOf="@id/chartTitle"
+                app:layout_constraintTop_toBottomOf="@id/valveSelectionCard"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
