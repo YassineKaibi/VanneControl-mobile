@@ -10,7 +10,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -48,8 +47,8 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun setupProfileButton() {
         findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
-            // TODO: Navigate to profile activity
-            Snackbar.make(it, "Profile clicked", Snackbar.LENGTH_SHORT).show()
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -68,10 +67,8 @@ class DashboardActivity : AppCompatActivity() {
 
         // History Button
         findViewById<CardView>(R.id.historyCard).setOnClickListener {
-            // TODO: Create HistoryActivity
-            Snackbar.make(it, "Opening History...", Snackbar.LENGTH_SHORT).show()
-            // val intent = Intent(this, HistoryActivity::class.java)
-            // startActivity(intent)
+            val intent = Intent(this, HistoryActivity::class.java)
+            startActivity(intent)
         }
 
         // Statistics Button
@@ -83,9 +80,7 @@ class DashboardActivity : AppCompatActivity() {
         // Notifications Button
         findViewById<CardView>(R.id.notificationsCard).setOnClickListener {
             // TODO: Create NotificationsActivity
-            Snackbar.make(it, "Opening Notifications...", Snackbar.LENGTH_SHORT).show()
-            // val intent = Intent(this, NotificationsActivity::class.java)
-            // startActivity(intent)
+            com.google.android.material.snackbar.Snackbar.make(it, "Opening Notifications...", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
         }
     }
 }

@@ -9,38 +9,36 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplicationV10">
-
-        <!-- Statistics Activity -->
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity2"
+            android:exported="false" /> <!-- History Activity -->
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false" /> <!-- Statistics Activity -->
         <activity
             android:name=".StatisticsActivity"
-            android:exported="false" />
-
-        <!-- Valve Management Activity -->
+            android:exported="false" /> <!-- Valve Management Activity -->
         <activity
             android:name=".ValveManagementActivity"
-            android:exported="false" />
-
-        <!-- Dashboard Activity -->
+            android:exported="false" /> <!-- Dashboard Activity -->
         <activity
             android:name=".DashboardActivity"
-            android:exported="false" />
-
-        <!-- Register Activity -->
+            android:exported="false" /> <!-- Register Activity -->
         <activity
             android:name=".RegisterActivity"
-            android:exported="false" />
-
-        <!-- Login Activity -->
+            android:exported="false" /> <!-- Login Activity -->
         <activity
             android:name=".LoginActivity"
-            android:exported="true" />
-
-        <!-- Main Activity -->
+            android:exported="false" /> <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
