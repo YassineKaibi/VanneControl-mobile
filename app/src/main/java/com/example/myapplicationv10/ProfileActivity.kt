@@ -1,84 +1,81 @@
 package com.example.myapplicationv10
-
 import android.os.Bundle
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.snackbar.Snackbar
+import com.example.myapplicationv10.databinding.ActivityProfileBinding
 
 class ProfileActivity : AppCompatActivity() {
 
-    // Données de profil (à remplacer par des vraies données de la base de données plus tard)
-    data class UserProfile(
-        val firstName: String,
-        val lastName: String,
-        val dateOfBirth: String,
-        val location: String,
-        val phoneNumber: String,
-        val email: String,
-        val numberOfValves: Int,
-        val gender: String
-    )
-
-    private lateinit var userProfile: UserProfile
+    private lateinit var binding: ActivityProfileBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_profile)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.topBar)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        // Initialisation du ViewBinding
+        binding = ActivityProfileBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // -------------------------------
+        // TOP BAR EVENTS
+        // -------------------------------
+
+        binding.backButton.setOnClickListener {
+            finish() // Retour en arrière
         }
 
-        // Données de profil exemple
-        userProfile = UserProfile(
-            firstName = "Yassine",
-            lastName = "Channa",
-            dateOfBirth = "15/03/1995",
-            location = "Houmt Souk, Medenine, Tunisia",
-            phoneNumber = "+216 XX XXX XXX",
-            email = "admin@vannecontrol.com",
-            numberOfValves = 8,
-            gender = "Male"
-        )
-
-        setupBackButton()
-        setupEditButton()
-        loadProfileData()
-    }
-
-    private fun setupBackButton() {
-        findViewById<ImageView>(R.id.backButton).setOnClickListener {
-            finish()
+        binding.editButton.setOnClickListener {
+            Toast.makeText(this, "Edit Profile clicked", Toast.LENGTH_SHORT).show()
         }
-    }
 
-    private fun setupEditButton() {
-        findViewById<CardView>(R.id.editProfileButton).setOnClickListener {
-            // TODO: Ouvrir l'écran d'édition du profil
-            Snackbar.make(it, "Edit profile - Coming soon", Snackbar.LENGTH_SHORT).show()
+        binding.closeButton.setOnClickListener {
+            Toast.makeText(this, "Close clicked", Toast.LENGTH_SHORT).show()
         }
+
+        // -------------------------------
+        // CHANGE PROFILE PICTURE
+        // -------------------------------
+
+        binding.changePhotoButton.setOnClickListener {
+            Toast.makeText(this, "Change photo clicked", Toast.LENGTH_SHORT).show()
+        }
+
+        // -------------------------------
+        // TABS SWITCHING
+        // -------------------------------
+
+        binding.personalInfoTab.setOnClickListener {
+            showPersonalInfo()
+        }
+
+        binding.teamsTab.setOnClickListener {
+            showSystemInfo()
+        }
+
+        // Afficher l’onglet par défaut
+        showPersonalInfo()
     }
 
-    private fun loadProfileData() {
-        // Afficher les données du profil
-        findViewById<TextView>(R.id.userFullName).text = "${userProfile.firstName} ${userProfile.lastName}"
-        findViewById<TextView>(R.id.userEmail).text = userProfile.email
+    // -----------------------------------------------------
+    //        FONCTIONS POUR L'AFFICHAGE DES SECTIONS
+    // -----------------------------------------------------
 
-        findViewById<TextView>(R.id.firstNameValue).text = userProfile.firstName
-        findViewById<TextView>(R.id.lastNameValue).text = userProfile.lastName
-        findViewById<TextView>(R.id.dateOfBirthValue).text = userProfile.dateOfBirth
-        findViewById<TextView>(R.id.locationValue).text = userProfile.location
-        findViewById<TextView>(R.id.phoneNumberValue).text = userProfile.phoneNumber
-        findViewById<TextView>(R.id.emailValue).text = userProfile.email
-        findViewById<TextView>(R.id.numberOfValvesValue).text = userProfile.numberOfValves.toString()
-        findViewById<TextView>(R.id.genderValue).text = userProfile.gender
+    private fun showPersonalInfo() {
+        binding.personalInfoSection.visibility = android.view.View.VISIBLE
+        binding.systemSection.visibility = android.view.View.GONE
+
+        // Changer style onglets
+        binding.personalInfoTab.setTextColor(getColor(android.R.color.black))
+        binding.teamsTab.setTextColor(getColor(android.R.color.darker_gray))
+        binding.teamsTab.setBackgroundColor(getColor(android.R.color.transparent))
+    }
+
+    private fun showSystemInfo() {
+        binding.personalInfoSection.visibility = android.view.View.GONE
+        binding.systemSection.visibility = android.view.View.VISIBLE
+
+        // Changer style onglets
+        binding.teamsTab.setTextColor(getColor(android.R.color.black))
+        binding.personalInfoTab.setTextColor(getColor(android.R.color.darker_gray))
+        binding.teamsTab.setBackgroundColor(getColor(android.R.color.holo_green_light))
     }
 }

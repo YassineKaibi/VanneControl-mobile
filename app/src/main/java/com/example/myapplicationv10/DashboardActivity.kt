@@ -3,6 +3,7 @@ package com.example.myapplicationv10
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
@@ -47,11 +48,17 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun setupProfileButton() {
         findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
+            Toast.makeText(this, "Profile button clicked!", Toast.LENGTH_SHORT).show()
+
+            try {
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+                e.printStackTrace()
+            }
         }
     }
-
     private fun setupActiveValvesRecyclerView() {
         val recyclerView = findViewById<RecyclerView>(R.id.activeValvesRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
