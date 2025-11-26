@@ -34,9 +34,10 @@ android {
         jvmTarget = "11"
     }
 }
+
 android {
     buildFeatures {
-        viewBinding =true
+        viewBinding = true
     }
 }
 
@@ -55,5 +56,15 @@ dependencies {
 
     // MPAndroidChart for statistics graphs
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // HiveMQ MQTT Client (moderne et maintenu)
+    implementation("com.hivemq:hivemq-mqtt-client:1.3.3")
+
+    // Coroutines pour async programming
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // Gson pour JSON parsing (MQTT payloads)
+    implementation("com.google.code.gson:gson:2.10.1")
 
 }

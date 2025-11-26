@@ -44,11 +44,14 @@ class ValveManagementActivity : AppCompatActivity() {
 
         setupBackButton()
         setupValveControls()
+
+        // Charger l'état initial des valves depuis le backend
+        loadInitialValveStates()
     }
 
     private fun setupBackButton() {
         findViewById<ImageView>(R.id.backButton).setOnClickListener {
-            finish() // Retour au Dashboard
+            finish()
         }
     }
 
@@ -72,9 +75,39 @@ class ValveManagementActivity : AppCompatActivity() {
         }
     }
 
+    private fun loadInitialValveStates() {
+        // Charger les états des valves depuis le backend en arrière-plan
+        runOnNetwork {
+            try {
+                // TODO: Remplacer par un vrai appel API
+                // val states = apiClient.getValveStates()
+
+                // Simuler une requête réseau
+                Thread.sleep(500)
+
+                // Mettre à jour l'UI sur le thread principal
+                runOnUiThread {
+                    // TODO: Mettre à jour les valves avec les données réelles
+                    // valves.forEachIndexed { index, valve ->
+                    //     valve.isOpen = states[index]
+                    //     updateValveUI(index)
+                    // }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    Snackbar.make(
+                        findViewById(android.R.id.content),
+                        "Erreur de chargement des états",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
     private fun showConfirmationDialog(valve: Valve, card: CardView, icon: ImageView) {
         val action = if (valve.isOpen) "fermer" else "ouvrir"
-        val actionCapital = if (valve.isOpen) "Fermer" else "Ouvrir"
 
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
@@ -87,19 +120,22 @@ class ValveManagementActivity : AppCompatActivity() {
     }
 
     private fun toggleValve(valve: Valve, card: CardView, icon: ImageView) {
-        // Changer l'état de la valve
+        // Changer l'état de la valve localement
         valve.isOpen = !valve.isOpen
 
-        // Mettre à jour la couleur et l'icône
-        updateValveAppearance(card, icon, valve.isOpen)
+        // Mettre à jour l'UI immédiatement sur le thread principal
+        runOnUiThread {
+            updateValveAppearance(card, icon, valve.isOpen)
 
-        // Afficher un message de confirmation
-        val status = if (valve.isOpen) "ouverte ✅" else "fermée ❌"
-        val message = "${valve.name} est maintenant $status"
-        Snackbar.make(card, message, Snackbar.LENGTH_SHORT).show()
+            val status = if (valve.isOpen) "ouverte ✅" else "fermée ❌"
+            val message = "${valve.name} est maintenant $status"
+            Snackbar.make(card, message, Snackbar.LENGTH_SHORT).show()
+        }
 
-        // TODO: Envoyer la commande au backend/MQTT
-        // sendValveCommand(valve.id, valve.isOpen)
+        // Envoyer la commande au backend/MQTT en arrière-plan
+        runOnNetwork {
+            sendValveCommand(valve.id, valve.isOpen)
+        }
     }
 
     private fun updateValveAppearance(card: CardView, icon: ImageView, isOpen: Boolean) {
@@ -114,11 +150,81 @@ class ValveManagementActivity : AppCompatActivity() {
         }
     }
 
-    // Fonction pour envoyer la commande (à implémenter plus tard)
+    // Fonction pour envoyer la commande (avec multithreading)
     private fun sendValveCommand(valveId: Int, isOpen: Boolean) {
-        // TODO: Intégration avec MQTT/API backend
-        // Exemple:
-        // mqttClient.publish("devices/${deviceId}/commands",
-        //     json { "valve" to valveId, "action" to if(isOpen) "open" else "close" })
+        try {
+            // TODO: Intégration avec MQTT/API backend
+            // Exemple d'implémentation:
+
+            // 1. Préparer le payload
+            val action = if (isOpen) "open" else "close"
+            val payload = """{"valve": $valveId, "action": "$action"}"""
+
+            // 2. Envoyer via MQTT (déjà sur un thread réseau)
+            // mqttClient.publish("devices/${deviceId}/commands", payload)
+
+            // 3. Simuler l'envoi (à remplacer)
+            Thread.sleep(200) // Simuler délai réseau
+
+            // 4. Confirmation sur le thread principal
+            runOnUiThread {
+                // Log ou notification de succès
+                println("✅ Commande envoyée: Valve $valveId -> $action")
+            }
+
+            // 5. Sauvegarder dans la base de données
+            runOnDatabase {
+                saveValveStateToDatabase(valveId, isOpen)
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+            // En cas d'erreur, restaurer l'état précédent
+            runOnUiThread {
+                val valve = valves.find { it.id == valveId }
+                valve?.let {
+                    it.isOpen = !isOpen // Restaurer l'état précédent
+
+                    // Mettre à jour l'UI
+                    val cardId = resources.getIdentifier("valve${valveId}Card", "id", packageName)
+                    val iconId = resources.getIdentifier("valve${valveId}Icon", "id", packageName)
+                    val card = findViewById<CardView>(cardId)
+                    val icon = findViewById<ImageView>(iconId)
+                    updateValveAppearance(card, icon, it.isOpen)
+
+                    Snackbar.make(
+                        findViewById(android.R.id.content),
+                        "Erreur: Impossible de contrôler la vanne",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun saveValveStateToDatabase(valveId: Int, isOpen: Boolean) {
+        try {
+            // TODO: Implémenter la sauvegarde en base de données
+            // Exemple:
+            // val timestamp = System.currentTimeMillis()
+            // database.valveHistoryDao().insert(
+            //     ValveHistory(
+            //         valveId = valveId,
+            //         action = if(isOpen) "opened" else "closed",
+            //         timestamp = timestamp,
+            //         user = "current_user"
+            //     )
+            // )
+
+            println("💾 État sauvegardé: Valve $valveId -> ${if(isOpen) "open" else "closed"}")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Les threads seront nettoyés automatiquement par ThreadManager
     }
 }
