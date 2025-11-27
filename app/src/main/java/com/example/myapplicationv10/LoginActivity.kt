@@ -9,10 +9,22 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.LoginViewModel
+import com.example.myapplicationv10.websocket.WebSocketManager
+import kotlinx.coroutines.launch
 
+/**
+ * LoginActivity - Écran de connexion avec MVVM
+ *
+ * Utilise LoginViewModel pour gérer l'authentification
+ * Observe les StateFlow pour mettre à jour l'UI de manière réactive
+ */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var emailField: EditText
@@ -20,6 +32,9 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var loginButton: Button
     private lateinit var registrationText: TextView
     private lateinit var loadingProgressBar: ProgressBar
+
+    // ViewModel
+    private val viewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +49,12 @@ class LoginActivity : AppCompatActivity() {
 
         initializeViews()
         setupClickListeners()
+        observeViewModel()
+
+        // Vérifier si l'utilisateur est déjà connecté
+        if (viewModel.isLoggedIn()) {
+            navigateToDashboard()
+        }
     }
 
     private fun initializeViews() {
@@ -43,7 +64,6 @@ class LoginActivity : AppCompatActivity() {
         registrationText = findViewById(R.id.registration)
 
         // Créer un ProgressBar programmatiquement si nécessaire
-        // ou l'ajouter dans le layout XML
         loadingProgressBar = ProgressBar(this).apply {
             visibility = View.GONE
         }
@@ -55,9 +75,7 @@ class LoginActivity : AppCompatActivity() {
             val email = emailField.text.toString().trim()
             val password = passwordField.text.toString().trim()
 
-            if (validateInput(email, password)) {
-                performLogin(email, password)
-            }
+            viewModel.login(email, password)
         }
 
         // Clic sur "Sign up now"
@@ -67,143 +85,80 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun validateInput(email: String, password: String): Boolean {
-        if (email.isEmpty()) {
-            emailField.error = "Email requis"
-            return false
-        }
+    /**
+     * Observer les StateFlow du ViewModel
+     */
+    private fun observeViewModel() {
+        // Observer l'état de connexion
+        lifecycleScope.launch {
+            viewModel.loginState.collect { result ->
+                when (result) {
+                    is NetworkResult.Loading -> {
+                        showLoading()
+                    }
 
-        if (password.isEmpty()) {
-            passwordField.error = "Mot de passe requis"
-            return false
-        }
+                    is NetworkResult.Success -> {
+                        hideLoading()
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Connexion réussie!",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
-        if (password.length < 6) {
-            passwordField.error = "Mot de passe trop court"
-            return false
-        }
+                        // Connecter au WebSocket
+                        WebSocketManager.getInstance(this@LoginActivity).connect()
 
-        return true
-    }
+                        // Naviguer vers le Dashboard
+                        navigateToDashboard()
+                    }
 
-    private fun performLogin(email: String, password: String) {
-        // Désactiver le bouton et afficher le chargement
-        runOnUiThread {
-            loginButton.isEnabled = false
-            loginButton.text = "Connexion en cours..."
-            // loadingProgressBar.visibility = View.VISIBLE
-        }
-
-        // Effectuer l'authentification en arrière-plan
-        runOnNetwork {
-            try {
-                // Simuler un appel API
-                val loginResult = authenticateUser(email, password)
-
-                // Traiter le résultat sur le thread principal
-                runOnUiThread {
-                    handleLoginResult(loginResult)
+                    is NetworkResult.Error -> {
+                        hideLoading()
+                        Toast.makeText(
+                            this@LoginActivity,
+                            result.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
+            }
+        }
 
-            } catch (e: Exception) {
-                e.printStackTrace()
+        // Observer les erreurs de champ email
+        lifecycleScope.launch {
+            viewModel.emailError.collect { error ->
+                emailField.error = error
+            }
+        }
 
-                // Gérer l'erreur sur le thread principal
-                runOnUiThread {
-                    handleLoginError(e)
-                }
+        // Observer les erreurs de champ password
+        lifecycleScope.launch {
+            viewModel.passwordError.collect { error ->
+                passwordField.error = error
             }
         }
     }
 
-    private fun authenticateUser(email: String, password: String): LoginResult {
-        // TODO: Remplacer par un vrai appel API
-        // Exemple:
-        // val response = apiClient.login(email, password)
-        // return LoginResult(
-        //     success = response.isSuccessful,
-        //     token = response.body?.token,
-        //     userId = response.body?.userId,
-        //     message = response.message
-        // )
-
-        // Simuler un délai réseau
-        Thread.sleep(1500)
-
-        // Vérification temporaire (à remplacer)
-        return if (email == "admin" && password == "admin123") {
-            LoginResult(
-                success = true,
-                token = "fake_jwt_token_12345",
-                userId = "user_001",
-                message = "Connexion réussie"
-            )
-        } else {
-            LoginResult(
-                success = false,
-                token = null,
-                userId = null,
-                message = "Email ou mot de passe incorrect"
-            )
-        }
+    private fun showLoading() {
+        loginButton.isEnabled = false
+        loginButton.text = "Connexion en cours..."
+        loadingProgressBar.visibility = View.VISIBLE
     }
 
-    private fun handleLoginResult(result: LoginResult) {
-        // Réactiver le bouton
+    private fun hideLoading() {
         loginButton.isEnabled = true
         loginButton.text = "Se connecter"
-
-        if (result.success) {
-            Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
-
-            // Sauvegarder le token en arrière-plan
-            runOnDatabase {
-                saveAuthToken(result.token, result.userId)
-            }
-
-            // Naviguer vers le Dashboard
-            val intent = Intent(this, DashboardActivity::class.java)
-            startActivity(intent)
-            finish()
-
-        } else {
-            Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
-        }
+        loadingProgressBar.visibility = View.GONE
     }
 
-    private fun handleLoginError(error: Exception) {
-        // Réactiver le bouton
-        loginButton.isEnabled = true
-        loginButton.text = "Se connecter"
-
-        Toast.makeText(
-            this,
-            "Erreur de connexion: ${error.message}",
-            Toast.LENGTH_LONG
-        ).show()
+    private fun navigateToDashboard() {
+        val intent = Intent(this, DashboardActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
-    private fun saveAuthToken(token: String?, userId: String?) {
-        try {
-            // TODO: Sauvegarder le token de manière sécurisée
-            // Exemple avec SharedPreferences (ou mieux: EncryptedSharedPreferences)
-            // val prefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
-            // prefs.edit()
-            //     .putString("auth_token", token)
-            //     .putString("user_id", userId)
-            //     .apply()
-
-            println("💾 Token sauvegardé: $token")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.resetState()
     }
-
-    // Data class pour le résultat de l'authentification
-    data class LoginResult(
-        val success: Boolean,
-        val token: String?,
-        val userId: String?,
-        val message: String
-    )
 }
