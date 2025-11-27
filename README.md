@@ -235,11 +235,12 @@ The app expects a backend API with the following endpoints:
 
 ## License
 
-[Specify your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-[Your contact information or project maintainer details]
+**Mohamed Yassine Kaibi**
+- LinkedIn: [https://www.linkedin.com/in/mohamedyassinekaibi/](https://www.linkedin.com/in/mohamedyassinekaibi/)
 
 ## Acknowledgments
 
