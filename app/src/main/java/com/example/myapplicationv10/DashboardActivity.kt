@@ -2,33 +2,42 @@ package com.example.myapplicationv10
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageView
-import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.DashboardViewModel
+import com.example.myapplicationv10.websocket.WebSocketManager
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
+/**
+ * DashboardActivity - Écran principal avec MVVM
+ *
+ * Utilise DashboardViewModel pour gérer les appareils
+ * Observe les StateFlow pour mettre à jour l'UI de manière réactive
+ * Intègre le WebSocket pour les mises à jour en temps réel
+ */
 class DashboardActivity : AppCompatActivity() {
-
-    // Data class for valve information
-    data class Valve(
-        val id: Int,
-        val name: String,
-        var isActive: Boolean,
-        var lastChanged: String = ""
-    )
-
-    // Sample active valves data
-    private val activeValves = mutableListOf<Valve>()
 
     private lateinit var activeValvesRecyclerView: RecyclerView
     private lateinit var activeValvesAdapter: ActiveValvesAdapter
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+
+    // ViewModel
+    private val viewModel: DashboardViewModel by viewModels()
+
+    // WebSocket manager
+    private lateinit var webSocketManager: WebSocketManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,111 +50,59 @@ class DashboardActivity : AppCompatActivity() {
             insets
         }
 
+        initializeViews()
         setupProfileButton()
         setupActiveValvesRecyclerView()
         setupNavigationButtons()
+        setupSwipeRefresh()
+        observeViewModel()
+        setupWebSocket()
+    }
 
-        // Charger les données des valves actives
-        loadActiveValves()
-
-        // Démarrer la mise à jour périodique des états
-        startPeriodicStatusUpdate()
+    private fun initializeViews() {
+        activeValvesRecyclerView = findViewById(R.id.activeValvesRecyclerView)
+        // Note: SwipeRefreshLayout doit être dans votre XML
+        // Si absent, commentez cette ligne
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
     }
 
     private fun setupProfileButton() {
         findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
-            // TODO: Navigate to profile activity
-            Snackbar.make(it, "Profile clicked", Snackbar.LENGTH_SHORT).show()
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
         }
     }
 
     private fun setupActiveValvesRecyclerView() {
-        activeValvesRecyclerView = findViewById(R.id.activeValvesRecyclerView)
         activeValvesRecyclerView.layoutManager = LinearLayoutManager(
             this,
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        activeValvesAdapter = ActiveValvesAdapter(activeValves)
+        activeValvesAdapter = ActiveValvesAdapter(mutableListOf())
         activeValvesRecyclerView.adapter = activeValvesAdapter
     }
 
-    private fun loadActiveValves() {
-        // Charger les valves actives depuis le backend
-        runOnNetwork {
-            try {
-                // TODO: Remplacer par un vrai appel API
-                // val response = apiClient.getActiveValves()
-
-                // Simuler un appel réseau
-                Thread.sleep(800)
-
-                // Simuler des données (à remplacer)
-                val fetchedValves = listOf(
-                    Valve(1, "Valve 1", true, "10:30 AM"),
-                    Valve(3, "Valve 3", true, "11:15 AM"),
-                    Valve(5, "Valve 5", true, "09:45 AM"),
-                    Valve(7, "Valve 7", true, "12:20 PM")
-                )
-
-                // Mettre à jour l'UI sur le thread principal
-                runOnUiThread {
-                    activeValves.clear()
-                    activeValves.addAll(fetchedValves)
-                    activeValvesAdapter.notifyDataSetChanged()
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-
-                runOnUiThread {
-                    Snackbar.make(
-                        findViewById(R.id.main),
-                        "Erreur de chargement des valves",
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    }
-
-    private fun startPeriodicStatusUpdate() {
-        // Mettre à jour l'état des valves toutes les 10 secondes
-        ThreadManager.runOnMainThreadDelayed(10000) {
-            if (!isFinishing) {
-                refreshValveStatus()
-                startPeriodicStatusUpdate() // Relancer
-            }
-        }
-    }
-
-    private fun refreshValveStatus() {
-        runOnNetwork {
-            try {
-                // TODO: Récupérer les états mis à jour depuis le backend
-                // val updatedStates = apiClient.getValveStates()
-
-                // Simuler un appel réseau léger
-                Thread.sleep(200)
-
-                // Mettre à jour l'UI sur le thread principal
-                runOnUiThread {
-                    // TODO: Mettre à jour activeValves avec les nouvelles données
-                    // activeValvesAdapter.notifyDataSetChanged()
-                }
-
-            } catch (e: Exception) {
-                // Silent fail pour les mises à jour périodiques
-                e.printStackTrace()
-            }
+    private fun setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener {
+            viewModel.refreshDevices()
         }
     }
 
     private fun setupNavigationButtons() {
         // Valve Control Button
         findViewById<CardView>(R.id.valveControlCard).setOnClickListener {
-            val intent = Intent(this, ValveManagementActivity::class.java)
-            startActivity(intent)
+            // Récupérer le premier appareil disponible
+            val currentState = viewModel.devicesState.value
+            if (currentState is NetworkResult.Success && currentState.data.isNotEmpty()) {
+                val firstDevice = currentState.data.first()
+                val intent = Intent(this, ValveManagementActivity::class.java)
+                intent.putExtra("DEVICE_ID", firstDevice.id)
+                intent.putExtra("DEVICE_NAME", firstDevice.name)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Aucun appareil disponible", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // History Button
@@ -162,19 +119,112 @@ class DashboardActivity : AppCompatActivity() {
 
         // Notifications Button
         findViewById<CardView>(R.id.notificationsCard).setOnClickListener {
-            // TODO: Create NotificationsActivity
-            Snackbar.make(it, "Opening Notifications...", Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(it, "Notifications à venir...", Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Observer les StateFlow du ViewModel
+     */
+    private fun observeViewModel() {
+        // Observer l'état des appareils
+        lifecycleScope.launch {
+            viewModel.devicesState.collect { result ->
+                when (result) {
+                    is NetworkResult.Loading -> {
+                        // Afficher le chargement si pas en cours de rafraîchissement
+                        if (!swipeRefreshLayout.isRefreshing) {
+                            // Optionnel: Afficher un loading indicator
+                        }
+                    }
+
+                    is NetworkResult.Success -> {
+                        swipeRefreshLayout.isRefreshing = false
+
+                        // Mettre à jour la liste des pistons actifs
+                        val activePistons = viewModel.getActivePistons()
+                        // TODO: Adapter ActiveValvesAdapter pour accepter des Pairs
+                        // Pour l'instant, on garde l'ancienne structure
+
+                        Toast.makeText(
+                            this@DashboardActivity,
+                            "${result.data.size} appareil(s) chargé(s)",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    is NetworkResult.Error -> {
+                        swipeRefreshLayout.isRefreshing = false
+
+                        Snackbar.make(
+                            findViewById(R.id.main),
+                            result.message,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+
+        // Observer l'état de rafraîchissement
+        lifecycleScope.launch {
+            viewModel.isRefreshing.collect { isRefreshing ->
+                swipeRefreshLayout.isRefreshing = isRefreshing
+            }
+        }
+    }
+
+    /**
+     * Configurer le WebSocket pour les mises à jour en temps réel
+     */
+    private fun setupWebSocket() {
+        webSocketManager = WebSocketManager.getInstance(this)
+
+        // Connecter au WebSocket
+        webSocketManager.connect()
+
+        // Écouter les mises à jour de pistons
+        webSocketManager.addPistonUpdateListener { message ->
+            runOnUiThread {
+                // Rafraîchir les données quand un piston change
+                viewModel.refreshDevices()
+
+                Toast.makeText(
+                    this,
+                    "Piston ${message.pistonNumber} mis à jour: ${message.state}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        // Écouter les changements de statut d'appareil
+        webSocketManager.addDeviceStatusListener { message ->
+            runOnUiThread {
+                viewModel.refreshDevices()
+
+                Toast.makeText(
+                    this,
+                    "Appareil ${message.status}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // Recharger les valves actives quand on revient au dashboard
-        loadActiveValves()
+        // Recharger les données quand on revient au dashboard
+        viewModel.refreshDevices()
+
+        // Reconnecter le WebSocket si déconnecté
+        if (!webSocketManager.isConnected()) {
+            webSocketManager.connect()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Les threads seront automatiquement nettoyés par ThreadManager
+        // Déconnecter le WebSocket
+        webSocketManager.disconnect()
     }
 }

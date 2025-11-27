@@ -3,33 +3,42 @@ package com.example.myapplicationv10
 import android.app.AlertDialog
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.utils.Constants
+import com.example.myapplicationv10.viewmodel.ValveManagementViewModel
+import com.example.myapplicationv10.websocket.WebSocketManager
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
+/**
+ * ValveManagementActivity - Gestion des 8 pistons avec MVVM
+ *
+ * Utilise ValveManagementViewModel pour gérer les pistons
+ * Observe les StateFlow pour mettre à jour l'UI de manière réactive
+ * Intègre le WebSocket pour les mises à jour en temps réel
+ */
 class ValveManagementActivity : AppCompatActivity() {
 
-    // Data class pour les valves
-    data class Valve(
-        val id: Int,
-        val name: String,
-        var isOpen: Boolean
-    )
+    // ViewModel
+    private val viewModel: ValveManagementViewModel by viewModels()
 
-    // Liste des 8 valves avec leurs états initiaux
-    private val valves = mutableListOf(
-        Valve(1, "Valve 1", true),   // Vert (ouverte)
-        Valve(2, "Valve 2", false),  // Rouge (fermée)
-        Valve(3, "Valve 3", true),   // Vert (ouverte)
-        Valve(4, "Valve 4", false),  // Rouge (fermée)
-        Valve(5, "Valve 5", true),   // Vert (ouverte)
-        Valve(6, "Valve 6", false),  // Rouge (fermée)
-        Valve(7, "Valve 7", true),   // Vert (ouverte)
-        Valve(8, "Valve 8", false)   // Rouge (fermée)
-    )
+    // WebSocket manager
+    private lateinit var webSocketManager: WebSocketManager
+
+    // ID et nom de l'appareil
+    private var deviceId: String? = null
+    private var deviceName: String? = null
+
+    // Map pour garder une référence des CardViews et ImageViews
+    private val valveViews = mutableMapOf<Int, Pair<CardView, ImageView>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,11 +51,23 @@ class ValveManagementActivity : AppCompatActivity() {
             insets
         }
 
+        // Récupérer l'ID de l'appareil depuis l'Intent
+        deviceId = intent.getStringExtra("DEVICE_ID")
+        deviceName = intent.getStringExtra("DEVICE_NAME")
+
+        if (deviceId == null) {
+            Toast.makeText(this, "Erreur: Aucun appareil sélectionné", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         setupBackButton()
         setupValveControls()
+        observeViewModel()
+        setupWebSocket()
 
-        // Charger l'état initial des valves depuis le backend
-        loadInitialValveStates()
+        // Charger les données de l'appareil
+        viewModel.loadDevice(deviceId!!)
     }
 
     private fun setupBackButton() {
@@ -58,173 +79,165 @@ class ValveManagementActivity : AppCompatActivity() {
     private fun setupValveControls() {
         // Configuration des 8 valves
         for (i in 1..8) {
-            val valve = valves[i - 1]
             val cardId = resources.getIdentifier("valve${i}Card", "id", packageName)
             val iconId = resources.getIdentifier("valve${i}Icon", "id", packageName)
 
             val card = findViewById<CardView>(cardId)
             val icon = findViewById<ImageView>(iconId)
 
-            // Définir la couleur et l'icône initiale
-            updateValveAppearance(card, icon, valve.isOpen)
+            // Stocker les références
+            valveViews[i] = Pair(card, icon)
 
             // Gérer le clic
             card.setOnClickListener {
-                showConfirmationDialog(valve, card, icon)
+                showConfirmationDialog(i)
             }
         }
     }
 
-    private fun loadInitialValveStates() {
-        // Charger les états des valves depuis le backend en arrière-plan
-        runOnNetwork {
-            try {
-                // TODO: Remplacer par un vrai appel API
-                // val states = apiClient.getValveStates()
+    /**
+     * Observer les StateFlow du ViewModel
+     */
+    private fun observeViewModel() {
+        // Observer l'état de l'appareil
+        lifecycleScope.launch {
+            viewModel.deviceState.collect { result ->
+                when (result) {
+                    is NetworkResult.Loading -> {
+                        // Optionnel: Afficher un loading indicator
+                    }
 
-                // Simuler une requête réseau
-                Thread.sleep(500)
+                    is NetworkResult.Success -> {
+                        val device = result.data
 
-                // Mettre à jour l'UI sur le thread principal
-                runOnUiThread {
-                    // TODO: Mettre à jour les valves avec les données réelles
-                    // valves.forEachIndexed { index, valve ->
-                    //     valve.isOpen = states[index]
-                    //     updateValveUI(index)
-                    // }
+                        // Mettre à jour l'UI pour chaque piston
+                        device.pistons.forEach { piston ->
+                            updatePistonUI(piston.pistonNumber, piston.state)
+                        }
+                    }
+
+                    is NetworkResult.Error -> {
+                        Snackbar.make(
+                            findViewById(android.R.id.content),
+                            result.message,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            }
+        }
+
+        // Observer l'état du contrôle
+        lifecycleScope.launch {
+            viewModel.controlState.collect { result ->
+                when (result) {
+                    is NetworkResult.Loading -> {
+                        // Optionnel: Afficher un loading indicator
+                    }
+
+                    is NetworkResult.Success -> {
+                        val piston = result.data
+                        val status = if (piston.state == Constants.STATE_ACTIVE)
+                            "activé ✅" else "désactivé ❌"
+
+                        Toast.makeText(
+                            this@ValveManagementActivity,
+                            "Piston ${piston.pistonNumber} $status",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    is NetworkResult.Error -> {
+                        Toast.makeText(
+                            this@ValveManagementActivity,
+                            result.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    null -> {
+                        // Pas d'état de contrôle
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Configurer le WebSocket pour les mises à jour en temps réel
+     */
+    private fun setupWebSocket() {
+        webSocketManager = WebSocketManager.getInstance(this)
+
+        // Écouter les mises à jour de pistons
+        webSocketManager.addPistonUpdateListener { message ->
+            // Vérifier si c'est pour notre appareil
+            if (message.deviceId == deviceId) {
                 runOnUiThread {
-                    Snackbar.make(
-                        findViewById(android.R.id.content),
-                        "Erreur de chargement des états",
-                        Snackbar.LENGTH_SHORT
+                    // Mettre à jour l'UI du piston
+                    updatePistonUI(message.pistonNumber, message.state)
+
+                    Toast.makeText(
+                        this,
+                        "Piston ${message.pistonNumber} mis à jour",
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         }
     }
 
-    private fun showConfirmationDialog(valve: Valve, card: CardView, icon: ImageView) {
-        val action = if (valve.isOpen) "fermer" else "ouvrir"
+    /**
+     * Afficher le dialogue de confirmation
+     */
+    private fun showConfirmationDialog(pistonNumber: Int) {
+        val piston = viewModel.getPiston(pistonNumber)
+        if (piston == null) {
+            Toast.makeText(this, "Piston non trouvé", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val action = if (piston.state == Constants.STATE_ACTIVE)
+            "désactiver" else "activer"
 
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
-            .setMessage("Voulez-vous vraiment $action ${valve.name} ?")
+            .setMessage("Voulez-vous vraiment $action le Piston $pistonNumber ?")
             .setPositiveButton("Oui") { _, _ ->
-                toggleValve(valve, card, icon)
+                viewModel.togglePiston(pistonNumber, piston.state)
             }
             .setNegativeButton("Annuler", null)
             .show()
     }
 
-    private fun toggleValve(valve: Valve, card: CardView, icon: ImageView) {
-        // Changer l'état de la valve localement
-        valve.isOpen = !valve.isOpen
+    /**
+     * Mettre à jour l'UI d'un piston
+     */
+    private fun updatePistonUI(pistonNumber: Int, state: String) {
+        val views = valveViews[pistonNumber] ?: return
+        val (card, icon) = views
 
-        // Mettre à jour l'UI immédiatement sur le thread principal
-        runOnUiThread {
-            updateValveAppearance(card, icon, valve.isOpen)
+        val isActive = state == Constants.STATE_ACTIVE
 
-            val status = if (valve.isOpen) "ouverte ✅" else "fermée ❌"
-            val message = "${valve.name} est maintenant $status"
-            Snackbar.make(card, message, Snackbar.LENGTH_SHORT).show()
-        }
-
-        // Envoyer la commande au backend/MQTT en arrière-plan
-        runOnNetwork {
-            sendValveCommand(valve.id, valve.isOpen)
-        }
-    }
-
-    private fun updateValveAppearance(card: CardView, icon: ImageView, isOpen: Boolean) {
-        if (isOpen) {
-            // Valve ouverte: vert avec toggle ON
+        if (isActive) {
+            // Piston activé: vert avec toggle ON
             card.setCardBackgroundColor(getColor(R.color.green))
             icon.setImageResource(R.drawable.ic_toggle_on)
         } else {
-            // Valve fermée: rouge avec toggle OFF
+            // Piston désactivé: rouge avec toggle OFF
             card.setCardBackgroundColor(getColor(android.R.color.holo_red_light))
             icon.setImageResource(R.drawable.ic_toggle_off)
         }
     }
 
-    // Fonction pour envoyer la commande (avec multithreading)
-    private fun sendValveCommand(valveId: Int, isOpen: Boolean) {
-        try {
-            // TODO: Intégration avec MQTT/API backend
-            // Exemple d'implémentation:
-
-            // 1. Préparer le payload
-            val action = if (isOpen) "open" else "close"
-            val payload = """{"valve": $valveId, "action": "$action"}"""
-
-            // 2. Envoyer via MQTT (déjà sur un thread réseau)
-            // mqttClient.publish("devices/${deviceId}/commands", payload)
-
-            // 3. Simuler l'envoi (à remplacer)
-            Thread.sleep(200) // Simuler délai réseau
-
-            // 4. Confirmation sur le thread principal
-            runOnUiThread {
-                // Log ou notification de succès
-                println("✅ Commande envoyée: Valve $valveId -> $action")
-            }
-
-            // 5. Sauvegarder dans la base de données
-            runOnDatabase {
-                saveValveStateToDatabase(valveId, isOpen)
-            }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-
-            // En cas d'erreur, restaurer l'état précédent
-            runOnUiThread {
-                val valve = valves.find { it.id == valveId }
-                valve?.let {
-                    it.isOpen = !isOpen // Restaurer l'état précédent
-
-                    // Mettre à jour l'UI
-                    val cardId = resources.getIdentifier("valve${valveId}Card", "id", packageName)
-                    val iconId = resources.getIdentifier("valve${valveId}Icon", "id", packageName)
-                    val card = findViewById<CardView>(cardId)
-                    val icon = findViewById<ImageView>(iconId)
-                    updateValveAppearance(card, icon, it.isOpen)
-
-                    Snackbar.make(
-                        findViewById(android.R.id.content),
-                        "Erreur: Impossible de contrôler la vanne",
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    }
-
-    private fun saveValveStateToDatabase(valveId: Int, isOpen: Boolean) {
-        try {
-            // TODO: Implémenter la sauvegarde en base de données
-            // Exemple:
-            // val timestamp = System.currentTimeMillis()
-            // database.valveHistoryDao().insert(
-            //     ValveHistory(
-            //         valveId = valveId,
-            //         action = if(isOpen) "opened" else "closed",
-            //         timestamp = timestamp,
-            //         user = "current_user"
-            //     )
-            // )
-
-            println("💾 État sauvegardé: Valve $valveId -> ${if(isOpen) "open" else "closed"}")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    override fun onResume() {
+        super.onResume()
+        // Rafraîchir l'appareil quand on revient sur l'écran
+        deviceId?.let { viewModel.refreshDevice() }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Les threads seront nettoyés automatiquement par ThreadManager
+        viewModel.resetControlState()
     }
 }
