@@ -4,10 +4,14 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * Piston - Modèle représentant un piston/vanne
+ *
+ * Note: Le champ `id` est optionnel car:
+ * - GET /devices retourne les pistons sans ID
+ * - POST /devices/{deviceId}/pistons/{pistonNumber} retourne le piston avec ID
  */
 data class Piston(
     @SerializedName("id")
-    val id: String,
+    val id: String? = null,
 
     @SerializedName("piston_number")
     val pistonNumber: Int,

@@ -4,17 +4,17 @@ import android.content.Context
 import android.util.Log
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient
-import com.hivemq.client.mqtt.mqtt3.message.connect.connack.Mqtt3ConnAck
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish
 import com.hivemq.client.mqtt.datatypes.MqttQos
+import kotlinx.coroutines.*
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * MqttManager - Gestion de la communication MQTT avec multithreading
+ * MqttManager - Gestion de la communication MQTT avec Kotlin Coroutines
  *
  * Gère la connexion MQTT pour contrôler les vannes via Raspberry Pi
- * Tous les appels sont thread-safe et asynchrones
+ * Tous les appels sont thread-safe et asynchrones avec coroutines
  *
  * Utilise HiveMQ MQTT Client (moderne et maintenu)
  */
@@ -40,6 +40,9 @@ class MqttManager private constructor(private val context: Context) {
     private val messageCallbacks = ConcurrentHashMap<String, (String) -> Unit>()
     private var isConnected = false
 
+    // CoroutineScope pour gérer les opérations MQTT
+    private val mqttScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     // Callback pour les événements de connexion
     interface ConnectionCallback {
         fun onConnectionSuccess()
@@ -60,8 +63,8 @@ class MqttManager private constructor(private val context: Context) {
     ) {
         this.connectionCallback = callback
 
-        // Connexion sur un thread réseau
-        ThreadManager.executeNetworkTask {
+        // Connexion sur un thread réseau avec coroutines
+        mqttScope.launch {
             try {
                 // Créer le client MQTT HiveMQ
                 val clientBuilder = MqttClient.builder()
@@ -91,23 +94,25 @@ class MqttManager private constructor(private val context: Context) {
 
                 // Se connecter de manière asynchrone
                 connectBuilder.send()
-                    .whenComplete { connAck, throwable ->
+                    .whenComplete { _, throwable ->
                         if (throwable != null) {
                             Log.e(TAG, "❌ Erreur de connexion MQTT", throwable)
                             isConnected = false
-                            ThreadManager.runOnMainThread {
+                            mqttScope.launch(Dispatchers.Main) {
                                 callback.onConnectionFailure("Erreur MQTT: ${throwable.message}")
                             }
                         } else {
                             Log.i(TAG, "✅ Connecté au broker MQTT")
                             isConnected = true
 
-                            ThreadManager.runOnMainThread {
+                            mqttScope.launch(Dispatchers.Main) {
                                 callback.onConnectionSuccess()
                             }
 
                             // S'abonner aux topics
-                            subscribeToTopics(deviceId)
+                            mqttScope.launch {
+                                subscribeToTopics(deviceId)
+                            }
                         }
                     }
 
@@ -115,7 +120,7 @@ class MqttManager private constructor(private val context: Context) {
                 Log.e(TAG, "❌ Erreur lors de la création du client MQTT", e)
                 isConnected = false
 
-                ThreadManager.runOnMainThread {
+                withContext(Dispatchers.Main) {
                     callback.onConnectionFailure("Erreur: ${e.message}")
                 }
             }
@@ -125,14 +130,16 @@ class MqttManager private constructor(private val context: Context) {
     /**
      * S'abonner aux topics nécessaires
      */
-    private fun subscribeToTopics(deviceId: String) {
+    private suspend fun subscribeToTopics(deviceId: String) = withContext(Dispatchers.IO) {
         try {
             // S'abonner au status des valves
             mqttClient?.subscribeWith()
                 ?.topicFilter("devices/$deviceId/status")
                 ?.qos(MqttQos.AT_LEAST_ONCE)
                 ?.callback { publish ->
-                    handleIncomingMessage("devices/$deviceId/status", publish)
+                    mqttScope.launch {
+                        handleIncomingMessage("devices/$deviceId/status", publish)
+                    }
                 }
                 ?.send()
                 ?.whenComplete { _, throwable ->
@@ -148,7 +155,9 @@ class MqttManager private constructor(private val context: Context) {
                 ?.topicFilter("devices/$deviceId/telemetry")
                 ?.qos(MqttQos.AT_LEAST_ONCE)
                 ?.callback { publish ->
-                    handleIncomingMessage("devices/$deviceId/telemetry", publish)
+                    mqttScope.launch {
+                        handleIncomingMessage("devices/$deviceId/telemetry", publish)
+                    }
                 }
                 ?.send()
                 ?.whenComplete { _, throwable ->
@@ -179,7 +188,7 @@ class MqttManager private constructor(private val context: Context) {
             return
         }
 
-        ThreadManager.executeNetworkTask {
+        mqttScope.launch {
             try {
                 val topic = "devices/$deviceId/commands"
                 val payload = """
@@ -199,12 +208,12 @@ class MqttManager private constructor(private val context: Context) {
                     ?.whenComplete { _, throwable ->
                         if (throwable != null) {
                             Log.e(TAG, "❌ Erreur d'envoi de commande", throwable)
-                            ThreadManager.runOnMainThread {
+                            mqttScope.launch(Dispatchers.Main) {
                                 onError?.invoke("Erreur MQTT: ${throwable.message}")
                             }
                         } else {
                             Log.i(TAG, "✅ Commande envoyée: Valve $valveId -> $action")
-                            ThreadManager.runOnMainThread {
+                            mqttScope.launch(Dispatchers.Main) {
                                 onSuccess?.invoke()
                             }
                         }
@@ -212,7 +221,7 @@ class MqttManager private constructor(private val context: Context) {
 
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Erreur lors de la publication", e)
-                ThreadManager.runOnMainThread {
+                withContext(Dispatchers.Main) {
                     onError?.invoke("Erreur: ${e.message}")
                 }
             }
@@ -222,23 +231,22 @@ class MqttManager private constructor(private val context: Context) {
     /**
      * Gérer les messages entrants
      */
-    private fun handleIncomingMessage(topic: String, publish: Mqtt3Publish) {
-        val payload = String(
-            publish.payloadAsBytes,
-            StandardCharsets.UTF_8
-        )
-
-        Log.d(TAG, "📥 Message reçu: $topic -> $payload")
-
-        // Traiter sur un thread d'arrière-plan
-        ThreadManager.executeBackgroundTask {
+    private suspend fun handleIncomingMessage(topic: String, publish: Mqtt3Publish) {
+        withContext(Dispatchers.Default) {
             try {
+                val payload = String(
+                    publish.payloadAsBytes,
+                    StandardCharsets.UTF_8
+                )
+
+                Log.d(TAG, "📥 Message reçu: $topic -> $payload")
+
                 // TODO: Parser le JSON avec Gson
                 // val data = gson.fromJson(payload, ValveStatus::class.java)
 
                 // Notifier les listeners enregistrés
                 messageCallbacks[topic]?.let { callback ->
-                    ThreadManager.runOnMainThread {
+                    withContext(Dispatchers.Main) {
                         callback(payload)
                     }
                 }
@@ -267,7 +275,7 @@ class MqttManager private constructor(private val context: Context) {
      * Se déconnecter du broker
      */
     fun disconnect() {
-        ThreadManager.executeNetworkTask {
+        mqttScope.launch {
             try {
                 if (isConnected) {
                     mqttClient?.disconnect()
@@ -290,6 +298,13 @@ class MqttManager private constructor(private val context: Context) {
      * Vérifier si connecté
      */
     fun isConnected(): Boolean = isConnected
+
+    /**
+     * Nettoyer les ressources et annuler toutes les coroutines
+     */
+    fun cleanup() {
+        mqttScope.cancel()
+    }
 
     // Data classes pour le parsing JSON (à utiliser avec Gson)
     data class ValveStatus(

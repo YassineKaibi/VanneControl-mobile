@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.myapplicationv10.utils.Constants
 import com.example.myapplicationv10.utils.TokenManager
 import com.google.gson.Gson
+import kotlinx.coroutines.*
 import okhttp3.*
 import java.util.concurrent.TimeUnit
 
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit
  * - Les mises à jour d'état des pistons
  * - Les changements de statut des appareils
  *
- * Singleton avec reconnexion automatique
+ * Singleton avec reconnexion automatique utilisant Kotlin Coroutines
  */
 class WebSocketManager private constructor(private val context: Context) {
 
@@ -38,6 +39,10 @@ class WebSocketManager private constructor(private val context: Context) {
     private var webSocket: WebSocket? = null
     private var isConnected = false
     private var shouldReconnect = true
+
+    // CoroutineScope pour gérer les opérations asynchrones
+    private val webSocketScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var reconnectJob: Job? = null
 
     // Listeners pour les différents types de messages
     private val pistonUpdateListeners = mutableListOf<(PistonUpdateMessage) -> Unit>()
@@ -122,23 +127,29 @@ class WebSocketManager private constructor(private val context: Context) {
      */
     fun disconnect() {
         shouldReconnect = false
+        reconnectJob?.cancel()
         webSocket?.close(1000, "Déconnexion normale")
         webSocket = null
         isConnected = false
     }
 
     /**
-     * Planifier une reconnexion
+     * Planifier une reconnexion avec coroutines
      */
     private fun scheduleReconnect() {
         Log.d(TAG, "Reconnexion programmée dans ${RECONNECT_DELAY_MS}ms")
 
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        // Annuler toute reconnexion en cours
+        reconnectJob?.cancel()
+
+        // Programmer une nouvelle reconnexion
+        reconnectJob = webSocketScope.launch(Dispatchers.Main) {
+            delay(RECONNECT_DELAY_MS)
             if (shouldReconnect && !isConnected) {
                 Log.d(TAG, "Tentative de reconnexion...")
                 connect()
             }
-        }, RECONNECT_DELAY_MS)
+        }
     }
 
     /**
@@ -235,4 +246,12 @@ class WebSocketManager private constructor(private val context: Context) {
      * Vérifier si le WebSocket est connecté
      */
     fun isConnected(): Boolean = isConnected
+
+    /**
+     * Nettoyer les ressources et annuler toutes les coroutines
+     */
+    fun cleanup() {
+        disconnect()
+        webSocketScope.cancel()
+    }
 }

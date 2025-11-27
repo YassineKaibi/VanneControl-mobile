@@ -16,6 +16,7 @@ import com.example.myapplicationv10.utils.Constants
 import com.example.myapplicationv10.viewmodel.ValveManagementViewModel
 import com.example.myapplicationv10.websocket.WebSocketManager
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
@@ -173,12 +174,12 @@ class ValveManagementActivity : AppCompatActivity() {
         webSocketManager.addPistonUpdateListener { message ->
             // Vérifier si c'est pour notre appareil
             if (message.deviceId == deviceId) {
-                runOnUiThread {
+                lifecycleScope.launch(Dispatchers.Main) {
                     // Mettre à jour l'UI du piston
                     updatePistonUI(message.pistonNumber, message.state)
 
                     Toast.makeText(
-                        this,
+                        this@ValveManagementActivity,
                         "Piston ${message.pistonNumber} mis à jour",
                         Toast.LENGTH_SHORT
                     ).show()

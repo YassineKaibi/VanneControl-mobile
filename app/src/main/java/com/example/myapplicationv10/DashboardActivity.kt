@@ -18,6 +18,7 @@ import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.viewmodel.DashboardViewModel
 import com.example.myapplicationv10.websocket.WebSocketManager
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
@@ -185,12 +186,12 @@ class DashboardActivity : AppCompatActivity() {
 
         // Écouter les mises à jour de pistons
         webSocketManager.addPistonUpdateListener { message ->
-            runOnUiThread {
+            lifecycleScope.launch(Dispatchers.Main) {
                 // Rafraîchir les données quand un piston change
                 viewModel.refreshDevices()
 
                 Toast.makeText(
-                    this,
+                    this@DashboardActivity,
                     "Piston ${message.pistonNumber} mis à jour: ${message.state}",
                     Toast.LENGTH_SHORT
                 ).show()
@@ -199,11 +200,11 @@ class DashboardActivity : AppCompatActivity() {
 
         // Écouter les changements de statut d'appareil
         webSocketManager.addDeviceStatusListener { message ->
-            runOnUiThread {
+            lifecycleScope.launch(Dispatchers.Main) {
                 viewModel.refreshDevices()
 
                 Toast.makeText(
-                    this,
+                    this@DashboardActivity,
                     "Appareil ${message.status}",
                     Toast.LENGTH_SHORT
                 ).show()

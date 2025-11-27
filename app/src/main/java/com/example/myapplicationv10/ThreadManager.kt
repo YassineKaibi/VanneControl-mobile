@@ -1,47 +1,41 @@
 package com.example.myapplicationv10
 
-import android.os.Handler
-import android.os.Looper
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import kotlinx.coroutines.*
 
 /**
- * ThreadManager - Gestion centralisée des threads pour VanneControl
+ * ThreadManager - Gestion centralisée des coroutines pour VanneControl
  *
  * Gère tous les appels asynchrones pour :
  * - Requêtes API/Backend
  * - Communication MQTT
  * - Opérations base de données
  * - Traitement de données lourdes
+ *
+ * Utilise Kotlin Coroutines pour une meilleure performance et gestion de la concurrence
  */
 object ThreadManager {
 
-    // Main Thread Handler pour les mises à jour UI
-    private val mainHandler = Handler(Looper.getMainLooper())
+    // Custom dispatchers pour différents types d'opérations
+    private val networkDispatcher = Dispatchers.IO.limitedParallelism(3)
+    private val databaseDispatcher = Dispatchers.IO.limitedParallelism(1)
+    private val backgroundDispatcher = Dispatchers.Default.limitedParallelism(2)
 
-    // Thread pool pour les opérations réseau (API/MQTT)
-    private val networkExecutor: ExecutorService = Executors.newFixedThreadPool(3)
-
-    // Thread pool pour les opérations base de données
-    private val databaseExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-
-    // Thread pool pour les opérations générales (calculs, parsing, etc.)
-    private val backgroundExecutor: ExecutorService = Executors.newFixedThreadPool(2)
+    // Scope global pour les opérations qui doivent survivre au cycle de vie des composants
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /**
      * Exécute une opération réseau (API REST, MQTT) en arrière-plan
      *
      * @param task La tâche à exécuter
-     * @return Future permettant d'annuler la tâche si nécessaire
+     * @return Job permettant d'annuler la tâche si nécessaire
      */
-    fun executeNetworkTask(task: () -> Unit): Future<*> {
-        return networkExecutor.submit {
+    fun executeNetworkTask(task: suspend () -> Unit): Job {
+        return applicationScope.launch(networkDispatcher) {
             try {
                 task()
             } catch (e: Exception) {
                 e.printStackTrace()
-                runOnMainThread {
+                withContext(Dispatchers.Main) {
                     // Gérer l'erreur sur le thread principal si nécessaire
                 }
             }
@@ -52,10 +46,10 @@ object ThreadManager {
      * Exécute une opération base de données en arrière-plan
      *
      * @param task La tâche à exécuter
-     * @return Future permettant d'annuler la tâche si nécessaire
+     * @return Job permettant d'annuler la tâche si nécessaire
      */
-    fun executeDatabaseTask(task: () -> Unit): Future<*> {
-        return databaseExecutor.submit {
+    fun executeDatabaseTask(task: suspend () -> Unit): Job {
+        return applicationScope.launch(databaseDispatcher) {
             try {
                 task()
             } catch (e: Exception) {
@@ -68,10 +62,10 @@ object ThreadManager {
      * Exécute une opération générale en arrière-plan
      *
      * @param task La tâche à exécuter
-     * @return Future permettant d'annuler la tâche si nécessaire
+     * @return Job permettant d'annuler la tâche si nécessaire
      */
-    fun executeBackgroundTask(task: () -> Unit): Future<*> {
-        return backgroundExecutor.submit {
+    fun executeBackgroundTask(task: suspend () -> Unit): Job {
+        return applicationScope.launch(backgroundDispatcher) {
             try {
                 task()
             } catch (e: Exception) {
@@ -85,13 +79,9 @@ object ThreadManager {
      *
      * @param task La tâche à exécuter sur le thread principal
      */
-    fun runOnMainThread(task: () -> Unit) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            // Déjà sur le thread principal
+    fun runOnMainThread(task: suspend () -> Unit) {
+        applicationScope.launch(Dispatchers.Main) {
             task()
-        } else {
-            // Post vers le thread principal
-            mainHandler.post { task() }
         }
     }
 
@@ -101,8 +91,11 @@ object ThreadManager {
      * @param delayMillis Délai en millisecondes
      * @param task La tâche à exécuter
      */
-    fun runOnMainThreadDelayed(delayMillis: Long, task: () -> Unit) {
-        mainHandler.postDelayed({ task() }, delayMillis)
+    fun runOnMainThreadDelayed(delayMillis: Long, task: suspend () -> Unit): Job {
+        return applicationScope.launch(Dispatchers.Main) {
+            delay(delayMillis)
+            task()
+        }
     }
 
     /**
@@ -112,18 +105,18 @@ object ThreadManager {
      * @param onResult Callback appelé sur le thread principal avec le résultat
      */
     fun <T> executeWithResult(
-        backgroundTask: () -> T,
-        onResult: (T) -> Unit
-    ): Future<*> {
-        return backgroundExecutor.submit {
+        backgroundTask: suspend () -> T,
+        onResult: suspend (T) -> Unit
+    ): Job {
+        return applicationScope.launch(backgroundDispatcher) {
             try {
                 val result = backgroundTask()
-                runOnMainThread {
+                withContext(Dispatchers.Main) {
                     onResult(result)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                runOnMainThread {
+                withContext(Dispatchers.Main) {
                     // Gérer l'erreur
                 }
             }
@@ -131,38 +124,85 @@ object ThreadManager {
     }
 
     /**
-     * Arrête tous les threads proprement
+     * Suspend function pour exécuter une tâche réseau
+     * À utiliser dans un contexte coroutine existant
+     */
+    suspend fun <T> withNetworkContext(task: suspend () -> T): T {
+        return withContext(networkDispatcher) {
+            task()
+        }
+    }
+
+    /**
+     * Suspend function pour exécuter une tâche base de données
+     * À utiliser dans un contexte coroutine existant
+     */
+    suspend fun <T> withDatabaseContext(task: suspend () -> T): T {
+        return withContext(databaseDispatcher) {
+            task()
+        }
+    }
+
+    /**
+     * Suspend function pour exécuter une tâche d'arrière-plan
+     * À utiliser dans un contexte coroutine existant
+     */
+    suspend fun <T> withBackgroundContext(task: suspend () -> T): T {
+        return withContext(backgroundDispatcher) {
+            task()
+        }
+    }
+
+    /**
+     * Annule toutes les coroutines en cours
      * À appeler lors de la fermeture de l'application
      */
     fun shutdown() {
-        networkExecutor.shutdown()
-        databaseExecutor.shutdown()
-        backgroundExecutor.shutdown()
+        applicationScope.cancel()
     }
 }
 
 /**
- * Extensions pratiques pour les activités
+ * Extensions pratiques pour les activités et autres composants
  */
-fun Any.runOnBackground(task: () -> Unit) {
-    ThreadManager.executeBackgroundTask(task)
+fun CoroutineScope.runOnBackground(task: suspend () -> Unit): Job {
+    return launch(Dispatchers.Default) {
+        task()
+    }
 }
 
-fun Any.runOnNetwork(task: () -> Unit) {
-    ThreadManager.executeNetworkTask(task)
+fun CoroutineScope.runOnNetwork(task: suspend () -> Unit): Job {
+    return launch(Dispatchers.IO) {
+        task()
+    }
 }
 
-fun Any.runOnDatabase(task: () -> Unit) {
-    ThreadManager.executeDatabaseTask(task)
+fun CoroutineScope.runOnDatabase(task: suspend () -> Unit): Job {
+    return launch(Dispatchers.IO) {
+        task()
+    }
 }
 
-fun Any.runOnUiThread(task: () -> Unit) {
-    ThreadManager.runOnMainThread(task)
+fun CoroutineScope.runOnUiThread(task: suspend () -> Unit): Job {
+    return launch(Dispatchers.Main) {
+        task()
+    }
 }
 
-fun <T> Any.runWithResult(
-    backgroundTask: () -> T,
-    onResult: (T) -> Unit
-) {
-    ThreadManager.executeWithResult(backgroundTask, onResult)
+fun <T> CoroutineScope.runWithResult(
+    backgroundTask: suspend () -> T,
+    onResult: suspend (T) -> Unit
+): Job {
+    return launch {
+        try {
+            val result = withContext(Dispatchers.Default) {
+                backgroundTask()
+            }
+            withContext(Dispatchers.Main) {
+                onResult(result)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

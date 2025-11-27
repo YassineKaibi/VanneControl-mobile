@@ -26,12 +26,14 @@ data class WebSocketMessage(
     val status: String? = null,
 
     @SerializedName("timestamp")
-    val timestamp: String? = null
+    val timestamp: Long? = null
 )
 
 /**
  * Message de mise à jour de piston
  * Type: "piston_update"
+ *
+ * Note: Le serveur envoie timestamp en millisecondes (Long)
  */
 data class PistonUpdateMessage(
     @SerializedName("device_id")
@@ -44,12 +46,14 @@ data class PistonUpdateMessage(
     val state: String, // "active" ou "inactive"
 
     @SerializedName("timestamp")
-    val timestamp: String
+    val timestamp: Long
 )
 
 /**
  * Message de statut d'appareil
  * Type: "device_status"
+ *
+ * Note: Le serveur envoie timestamp en millisecondes (Long)
  */
 data class DeviceStatusMessage(
     @SerializedName("device_id")
@@ -59,5 +63,5 @@ data class DeviceStatusMessage(
     val status: String, // "online" ou "offline"
 
     @SerializedName("timestamp")
-    val timestamp: String
+    val timestamp: Long
 )
