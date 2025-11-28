@@ -24,7 +24,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val authRepository = AuthRepository(application)
 
     // État de la liste des appareils
-    private val _devicesState = MutableStateFlow<NetworkResult<List<Device>>>(NetworkResult.Loading)
+    private val _devicesState = MutableStateFlow<NetworkResult<List<Device>>>(NetworkResult.Idle)
     val devicesState: StateFlow<NetworkResult<List<Device>>> = _devicesState.asStateFlow()
 
     // État du rafraîchissement

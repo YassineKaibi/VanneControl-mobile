@@ -132,6 +132,11 @@ class DashboardActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.devicesState.collect { result ->
                 when (result) {
+                    is NetworkResult.Idle -> {
+                        // État initial - Ne rien faire
+                        swipeRefreshLayout.isRefreshing = false
+                    }
+
                     is NetworkResult.Loading -> {
                         // Afficher le chargement si pas en cours de rafraîchissement
                         if (!swipeRefreshLayout.isRefreshing) {

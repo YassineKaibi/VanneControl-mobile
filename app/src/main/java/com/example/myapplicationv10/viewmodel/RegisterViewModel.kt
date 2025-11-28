@@ -22,7 +22,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     private val authRepository = AuthRepository(application)
 
     // État de l'inscription
-    private val _registerState = MutableStateFlow<NetworkResult<AuthResponse>>(NetworkResult.Loading)
+    private val _registerState = MutableStateFlow<NetworkResult<AuthResponse>>(NetworkResult.Idle)
     val registerState: StateFlow<NetworkResult<AuthResponse>> = _registerState.asStateFlow()
 
     // État de validation des champs
@@ -113,7 +113,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
      * Réinitialiser l'état d'inscription
      */
     fun resetState() {
-        _registerState.value = NetworkResult.Loading
+        _registerState.value = NetworkResult.Idle
         _emailError.value = null
         _passwordError.value = null
         _confirmPasswordError.value = null

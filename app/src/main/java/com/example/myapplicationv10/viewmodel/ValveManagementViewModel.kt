@@ -25,7 +25,7 @@ class ValveManagementViewModel(application: Application) : AndroidViewModel(appl
     private val pistonRepository = PistonRepository(application)
 
     // État de l'appareil sélectionné
-    private val _deviceState = MutableStateFlow<NetworkResult<Device>>(NetworkResult.Loading)
+    private val _deviceState = MutableStateFlow<NetworkResult<Device>>(NetworkResult.Idle)
     val deviceState: StateFlow<NetworkResult<Device>> = _deviceState.asStateFlow()
 
     // État du contrôle de piston (pour afficher les messages de succès/erreur)

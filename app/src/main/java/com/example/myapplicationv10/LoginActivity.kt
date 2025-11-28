@@ -93,6 +93,11 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.loginState.collect { result ->
                 when (result) {
+                    is NetworkResult.Idle -> {
+                        // État initial - Ne rien faire
+                        hideLoading()
+                    }
+
                     is NetworkResult.Loading -> {
                         showLoading()
                     }

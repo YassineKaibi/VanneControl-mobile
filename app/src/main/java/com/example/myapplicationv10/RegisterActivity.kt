@@ -76,6 +76,11 @@ class RegisterActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.registerState.collect { result ->
                 when (result) {
+                    is NetworkResult.Idle -> {
+                        // État initial - Ne rien faire
+                        hideLoading()
+                    }
+
                     is NetworkResult.Loading -> {
                         showLoading()
                     }

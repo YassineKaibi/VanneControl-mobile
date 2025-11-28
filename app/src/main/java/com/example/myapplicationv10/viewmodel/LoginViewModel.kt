@@ -22,7 +22,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application)
 
     // État de la connexion
-    private val _loginState = MutableStateFlow<NetworkResult<AuthResponse>>(NetworkResult.Loading)
+    private val _loginState = MutableStateFlow<NetworkResult<AuthResponse>>(NetworkResult.Idle)
     val loginState: StateFlow<NetworkResult<AuthResponse>> = _loginState.asStateFlow()
 
     // État de validation des champs
@@ -92,7 +92,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
      * Utile pour effacer les messages d'erreur après navigation
      */
     fun resetState() {
-        _loginState.value = NetworkResult.Loading
+        _loginState.value = NetworkResult.Idle
         _emailError.value = null
         _passwordError.value = null
     }

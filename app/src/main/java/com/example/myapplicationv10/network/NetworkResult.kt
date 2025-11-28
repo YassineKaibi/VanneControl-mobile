@@ -8,6 +8,11 @@ package com.example.myapplicationv10.network
  */
 sealed class NetworkResult<out T> {
     /**
+     * État initial/repos - Aucune opération en cours
+     */
+    object Idle : NetworkResult<Nothing>()
+
+    /**
      * État de chargement - Requête en cours
      */
     object Loading : NetworkResult<Nothing>()
@@ -54,6 +59,16 @@ inline fun <T> NetworkResult<T>.onError(action: (String, Int?) -> Unit): Network
  */
 inline fun <T> NetworkResult<T>.onLoading(action: () -> Unit): NetworkResult<T> {
     if (this is NetworkResult.Loading) {
+        action()
+    }
+    return this
+}
+
+/**
+ * Extension pour exécuter du code uniquement en état initial/repos
+ */
+inline fun <T> NetworkResult<T>.onIdle(action: () -> Unit): NetworkResult<T> {
+    if (this is NetworkResult.Idle) {
         action()
     }
     return this
