@@ -33,11 +33,18 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-}
 
-android {
     buildFeatures {
         viewBinding = true
+    }
+
+    packaging {
+        resources {
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/*.SF"
+            excludes += "META-INF/*.DSA"
+            excludes += "META-INF/*.RSA"
+        }
     }
 }
 
