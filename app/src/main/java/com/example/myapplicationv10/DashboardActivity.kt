@@ -80,7 +80,7 @@ class DashboardActivity : AppCompatActivity() {
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        activeValvesAdapter = ActiveValvesAdapter(mutableListOf())
+        activeValvesAdapter = ActiveValvesAdapter(emptyList())
         activeValvesRecyclerView.adapter = activeValvesAdapter
     }
 
@@ -228,4 +228,12 @@ class DashboardActivity : AppCompatActivity() {
         // Déconnecter le WebSocket
         webSocketManager.disconnect()
     }
+
+    /**
+     * Data class pour représenter une valve dans l'adapter
+     */
+    data class Valve(
+        val name: String,
+        val lastChanged: String
+    )
 }
