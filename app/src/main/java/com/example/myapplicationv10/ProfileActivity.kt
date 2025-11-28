@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplicationv10.databinding.ActivityProfileBinding
 import com.google.android.material.snackbar.Snackbar
@@ -11,6 +13,33 @@ import com.google.android.material.snackbar.Snackbar
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
+
+    // Activity Result Launcher for edit profile
+    private val editProfileLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.let { data ->
+                    // Récupérer les nouvelles données
+                    userProfile.firstName = data.getStringExtra("firstName") ?: userProfile.firstName
+                    userProfile.lastName = data.getStringExtra("lastName") ?: userProfile.lastName
+                    userProfile.dateOfBirth = data.getStringExtra("dateOfBirth") ?: userProfile.dateOfBirth
+                    userProfile.email = data.getStringExtra("email") ?: userProfile.email
+                    userProfile.phoneNumber = data.getStringExtra("phone") ?: userProfile.phoneNumber
+                    userProfile.location = data.getStringExtra("location") ?: userProfile.location
+                    userProfile.numberOfValves = data.getIntExtra("numberOfValves", userProfile.numberOfValves)
+
+                    // Recharger l'interface
+                    loadProfileData()
+
+                    // Afficher un message de confirmation
+                    Snackbar.make(
+                        binding.root,
+                        "Profile updated successfully!",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
 
     companion object {
         private const val EDIT_PROFILE_REQUEST = 100
@@ -131,38 +160,7 @@ class ProfileActivity : AppCompatActivity() {
         intent.putExtra("location", userProfile.location)
         intent.putExtra("numberOfValves", userProfile.numberOfValves)
 
-        startActivityForResult(intent, EDIT_PROFILE_REQUEST)
-    }
-
-    // -----------------------------------------------------
-    //        RÉCEPTION DES DONNÉES MODIFIÉES
-    // -----------------------------------------------------
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == EDIT_PROFILE_REQUEST && resultCode == RESULT_OK) {
-            data?.let {
-                // Récupérer les nouvelles données
-                userProfile.firstName = it.getStringExtra("firstName") ?: userProfile.firstName
-                userProfile.lastName = it.getStringExtra("lastName") ?: userProfile.lastName
-                userProfile.dateOfBirth = it.getStringExtra("dateOfBirth") ?: userProfile.dateOfBirth
-                userProfile.email = it.getStringExtra("email") ?: userProfile.email
-                userProfile.phoneNumber = it.getStringExtra("phone") ?: userProfile.phoneNumber
-                userProfile.location = it.getStringExtra("location") ?: userProfile.location
-                userProfile.numberOfValves = it.getIntExtra("numberOfValves", userProfile.numberOfValves)
-
-                // Recharger l'interface
-                loadProfileData()
-
-                // Afficher un message de confirmation
-                Snackbar.make(
-                    binding.root,
-                    "Profile updated successfully!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-            }
-        }
+        editProfileLauncher.launch(intent)
     }
 
     // -----------------------------------------------------

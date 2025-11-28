@@ -13,6 +13,7 @@ import kotlinx.coroutines.*
  *
  * Utilise Kotlin Coroutines pour une meilleure performance et gestion de la concurrence
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 object ThreadManager {
 
     // Custom dispatchers pour différents types d'opérations

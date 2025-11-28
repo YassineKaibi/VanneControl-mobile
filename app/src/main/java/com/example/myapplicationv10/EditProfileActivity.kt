@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
@@ -39,6 +40,7 @@ class EditProfileActivity : AppCompatActivity() {
 
         initializeViews()
         setupBackButton()
+        setupBackPressedHandler()
         setupSaveButtons()
         setupDatePicker()
         setupChangePhotoButton()
@@ -65,6 +67,14 @@ class EditProfileActivity : AppCompatActivity() {
             // Vérifier si des modifications ont été faites
             showDiscardChangesDialog()
         }
+    }
+
+    private fun setupBackPressedHandler() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showDiscardChangesDialog()
+            }
+        })
     }
 
     private fun setupSaveButtons() {
@@ -307,9 +317,5 @@ class EditProfileActivity : AppCompatActivity() {
             }
             .setNegativeButton("Keep Editing", null)
             .show()
-    }
-
-    override fun onBackPressed() {
-        showDiscardChangesDialog()
     }
 }
