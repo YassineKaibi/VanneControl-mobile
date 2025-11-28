@@ -136,6 +136,10 @@ class ValveManagementActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.controlState.collect { result ->
                 when (result) {
+                    is NetworkResult.Idle -> {
+                        // État initial - Ne rien faire
+                    }
+
                     is NetworkResult.Loading -> {
                         // Optionnel: Afficher un loading indicator
                     }
