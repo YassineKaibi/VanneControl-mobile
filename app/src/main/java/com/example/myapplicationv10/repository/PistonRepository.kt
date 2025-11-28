@@ -94,6 +94,7 @@ class PistonRepository(private val context: Context) {
                 is NetworkResult.Success -> NetworkResult.Success(result.data.piston)
                 is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
                 is NetworkResult.Loading -> NetworkResult.Loading
+                is NetworkResult.Idle -> NetworkResult.Idle
             }
         }
     }

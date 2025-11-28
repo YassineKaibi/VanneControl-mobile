@@ -32,6 +32,7 @@ class DeviceRepository(private val context: Context) {
                 is NetworkResult.Success -> NetworkResult.Success(result.data.devices)
                 is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
                 is NetworkResult.Loading -> NetworkResult.Loading
+                is NetworkResult.Idle -> NetworkResult.Idle
             }
         }
     }
@@ -53,6 +54,7 @@ class DeviceRepository(private val context: Context) {
                 is NetworkResult.Success -> NetworkResult.Success(result.data.device)
                 is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
                 is NetworkResult.Loading -> NetworkResult.Loading
+                is NetworkResult.Idle -> NetworkResult.Idle
             }
         }
     }
