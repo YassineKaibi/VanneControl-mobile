@@ -44,6 +44,7 @@ android {
             excludes += "META-INF/*.SF"
             excludes += "META-INF/*.DSA"
             excludes += "META-INF/*.RSA"
+            pickFirsts += "META-INF/io.netty.versions.properties"
         }
     }
 }
