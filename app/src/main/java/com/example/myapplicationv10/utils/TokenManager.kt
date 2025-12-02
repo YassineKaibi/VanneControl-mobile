@@ -97,6 +97,14 @@ class TokenManager(context: Context) {
     }
 
     /**
+     * Déconnecter l'utilisateur
+     * Alias pour clearAuth() pour plus de clarté
+     */
+    fun logout() {
+        clearAuth()
+    }
+
+    /**
      * Obtenir le header Authorization complet avec le Bearer prefix
      */
     fun getAuthorizationHeader(): String? {

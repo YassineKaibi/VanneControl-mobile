@@ -35,6 +35,38 @@ interface ApiService {
     ): Response<AuthResponse>
 
     // =====================
+    // USER PROFILE
+    // =====================
+
+    /**
+     * GET /user/profile
+     * Récupérer le profil de l'utilisateur connecté
+     * Requires: Authorization header avec JWT token
+     */
+    @GET("user/profile")
+    suspend fun getUserProfile(): Response<User>
+
+    /**
+     * PUT /user/profile
+     * Mettre à jour le profil de l'utilisateur connecté
+     * Requires: Authorization header avec JWT token
+     */
+    @PUT("user/profile")
+    suspend fun updateUserProfile(
+        @Body request: UpdateProfileRequest
+    ): Response<User>
+
+    /**
+     * PUT /user/preferences
+     * Mettre à jour les préférences de l'utilisateur
+     * Requires: Authorization header avec JWT token
+     */
+    @PUT("user/preferences")
+    suspend fun updateUserPreferences(
+        @Body request: UpdatePreferencesRequest
+    ): Response<User>
+
+    // =====================
     // DEVICES
     // =====================
 

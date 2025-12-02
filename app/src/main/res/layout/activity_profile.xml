@@ -553,6 +553,29 @@
 
             </LinearLayout>
 
+            <!-- SPACER BEFORE LOGOUT -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:background="#F5F5F5" />
+
+            <!-- LOGOUT BUTTON -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/logoutButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="32dp"
+                android:text="Logout"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textAllCaps="false"
+                android:paddingVertical="14dp"
+                app:cornerRadius="8dp"
+                app:backgroundTint="#FF5252"
+                app:strokeWidth="0dp"
+                style="@style/Widget.MaterialComponents.Button" />
+
         </LinearLayout>
 
     </ScrollView>

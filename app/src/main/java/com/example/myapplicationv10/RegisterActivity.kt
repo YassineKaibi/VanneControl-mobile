@@ -144,6 +144,8 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun navigateToDashboard() {
         val intent = Intent(this, DashboardActivity::class.java)
+        // Clear back stack - user cannot go back to registration/login
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }

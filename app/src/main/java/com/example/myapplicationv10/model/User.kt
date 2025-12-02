@@ -13,5 +13,26 @@ data class User(
     val email: String,
 
     @SerializedName("role")
-    val role: String? = "user"
+    val role: String? = "user",
+
+    @SerializedName("firstName")
+    val firstName: String? = null,
+
+    @SerializedName("lastName")
+    val lastName: String? = null,
+
+    @SerializedName("phoneNumber")
+    val phoneNumber: String? = null,
+
+    @SerializedName("dateOfBirth")
+    val dateOfBirth: String? = null,
+
+    @SerializedName("location")
+    val location: String? = null,
+
+    @SerializedName("avatarUrl")
+    val avatarUrl: String? = null,
+
+    @SerializedName("preferences")
+    val preferences: String? = "{}"
 )

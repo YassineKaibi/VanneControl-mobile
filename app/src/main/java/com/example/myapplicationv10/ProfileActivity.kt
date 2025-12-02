@@ -3,69 +3,48 @@ package com.example.myapplicationv10
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.myapplicationv10.databinding.ActivityProfileBinding
+import com.example.myapplicationv10.model.User
+import com.example.myapplicationv10.network.ApiClient
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.utils.TokenManager
+import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
+    private val viewModel: ProfileViewModel by viewModels()
+
+    // Current user data from API
+    private var currentUser: User? = null
 
     // Activity Result Launcher for edit profile
     private val editProfileLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                result.data?.let { data ->
-                    // Récupérer les nouvelles données
-                    userProfile.firstName = data.getStringExtra("firstName") ?: userProfile.firstName
-                    userProfile.lastName = data.getStringExtra("lastName") ?: userProfile.lastName
-                    userProfile.dateOfBirth = data.getStringExtra("dateOfBirth") ?: userProfile.dateOfBirth
-                    userProfile.email = data.getStringExtra("email") ?: userProfile.email
-                    userProfile.phoneNumber = data.getStringExtra("phone") ?: userProfile.phoneNumber
-                    userProfile.location = data.getStringExtra("location") ?: userProfile.location
-                    userProfile.numberOfValves = data.getIntExtra("numberOfValves", userProfile.numberOfValves)
+                // Reload profile from API after edit
+                viewModel.loadUserProfile()
 
-                    // Recharger l'interface
-                    loadProfileData()
-
-                    // Afficher un message de confirmation
-                    Snackbar.make(
-                        binding.root,
-                        "Profile updated successfully!",
-                        Snackbar.LENGTH_SHORT
-                    ).show()
-                }
+                Snackbar.make(
+                    binding.root,
+                    "Profile updated successfully!",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
 
     companion object {
         private const val EDIT_PROFILE_REQUEST = 100
     }
-
-    // Data class pour les informations du profil
-    data class UserProfile(
-        var firstName: String,
-        var lastName: String,
-        var dateOfBirth: String,
-        var email: String,
-        var phoneNumber: String,
-        var location: String,
-        var numberOfValves: Int
-    )
-
-    // Données du profil
-    private var userProfile = UserProfile(
-        firstName = "Yassine",
-        lastName = "Channa",
-        dateOfBirth = "15/03/1995",
-        email = "admin@vannecontrol.com",
-        phoneNumber = "+216 XX XXX XXX",
-        location = "Houmt Souk, Medenine, Tunisia",
-        numberOfValves = 8
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,16 +53,61 @@ class ProfileActivity : AppCompatActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Charger les données du profil
-        loadProfileData()
-
         // Configuration des événements
         setupTopBarEvents()
         setupPhotoChangeButton()
         setupTabs()
+        setupLogoutButton()
 
         // Afficher l'onglet par défaut
         showPersonalInfo()
+
+        // Observer les changements d'état du profil
+        observeProfileState()
+
+        // Charger les données du profil depuis l'API
+        viewModel.loadUserProfile()
+    }
+
+    // -----------------------------------------------------
+    //        OBSERVATION DES DONNÉES
+    // -----------------------------------------------------
+
+    private fun observeProfileState() {
+        lifecycleScope.launch {
+            viewModel.profileState.collect { result ->
+                when (result) {
+                    is NetworkResult.Loading -> {
+                        showLoading(true)
+                    }
+                    is NetworkResult.Success -> {
+                        showLoading(false)
+                        currentUser = result.data
+                        loadProfileData()
+                    }
+                    is NetworkResult.Error -> {
+                        showLoading(false)
+                        showError(result.message)
+                    }
+                    is NetworkResult.Idle -> {
+                        showLoading(false)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        // TODO: Add a progress bar if needed
+        binding.root.alpha = if (isLoading) 0.5f else 1.0f
+    }
+
+    private fun showError(message: String) {
+        Snackbar.make(
+            binding.root,
+            "Error: $message",
+            Snackbar.LENGTH_LONG
+        ).show()
     }
 
     // -----------------------------------------------------
@@ -123,25 +147,37 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupLogoutButton() {
+        binding.logoutButton.setOnClickListener {
+            showLogoutConfirmationDialog()
+        }
+    }
+
     // -----------------------------------------------------
     //        CHARGEMENT DES DONNÉES
     // -----------------------------------------------------
 
     private fun loadProfileData() {
-        // Mettre à jour l'en-tête
-        binding.userFullName.text = "${userProfile.firstName} ${userProfile.lastName}"
-        binding.userEmailHeader.text = userProfile.email
+        val user = currentUser ?: return
 
-        // Mettre à jour Personal Info
-        binding.firstNameValue.text = userProfile.firstName
-        binding.lastNameValue.text = userProfile.lastName
-        binding.dateOfBirthValue.text = userProfile.dateOfBirth
-        binding.emailValue.text = userProfile.email
-        binding.phoneNumberValue.text = userProfile.phoneNumber
-        binding.locationValue.text = userProfile.location
+        // Mettre à jour l'en-tête
+        val fullName = listOfNotNull(user.firstName, user.lastName)
+            .joinToString(" ")
+            .ifEmpty { "User" }
+        binding.userFullName.text = fullName
+        binding.userEmailHeader.text = user.email
+
+        // Mettre à jour Personal Info avec "Not set" par défaut
+        binding.firstNameValue.text = user.firstName ?: "Not set"
+        binding.lastNameValue.text = user.lastName ?: "Not set"
+        binding.dateOfBirthValue.text = user.dateOfBirth ?: "Not set"
+        binding.emailValue.text = user.email
+        binding.phoneNumberValue.text = user.phoneNumber ?: "Not set"
+        binding.locationValue.text = user.location ?: "Not set"
 
         // Mettre à jour System Info
-        binding.numberOfValvesValue.text = "${userProfile.numberOfValves} valves to manage"
+        // Note: numberOfValves is not in the User model - this should come from device count
+        binding.numberOfValvesValue.text = "Managed through devices"
     }
 
     // -----------------------------------------------------
@@ -149,16 +185,17 @@ class ProfileActivity : AppCompatActivity() {
     // -----------------------------------------------------
 
     private fun openEditProfile() {
+        val user = currentUser ?: return
+
         val intent = Intent(this, EditProfileActivity::class.java)
 
-        // Passer les données actuelles
-        intent.putExtra("firstName", userProfile.firstName)
-        intent.putExtra("lastName", userProfile.lastName)
-        intent.putExtra("dateOfBirth", userProfile.dateOfBirth)
-        intent.putExtra("email", userProfile.email)
-        intent.putExtra("phoneNumber", userProfile.phoneNumber)
-        intent.putExtra("location", userProfile.location)
-        intent.putExtra("numberOfValves", userProfile.numberOfValves)
+        // Passer les données actuelles de l'utilisateur
+        intent.putExtra("firstName", user.firstName)
+        intent.putExtra("lastName", user.lastName)
+        intent.putExtra("dateOfBirth", user.dateOfBirth)
+        intent.putExtra("email", user.email)
+        intent.putExtra("phoneNumber", user.phoneNumber)
+        intent.putExtra("location", user.location)
 
         editProfileLauncher.launch(intent)
     }
@@ -209,6 +246,36 @@ class ProfileActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    // -----------------------------------------------------
+    //        LOGOUT CONFIRMATION DIALOG
+    // -----------------------------------------------------
+
+    private fun showLogoutConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Logout") { _, _ ->
+                performLogout()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performLogout() {
+        // Clear authentication data
+        val tokenManager = TokenManager.getInstance(this)
+        tokenManager.logout()
+
+        // Reset API client
+        ApiClient.reset()
+
+        // Navigate to login screen and clear back stack
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     // -----------------------------------------------------
