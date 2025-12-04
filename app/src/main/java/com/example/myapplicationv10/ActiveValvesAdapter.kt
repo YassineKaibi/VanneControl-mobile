@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ActiveValvesAdapter(private val valves: List<DashboardActivity.Valve>) :
+class ActiveValvesAdapter(private var valves: List<DashboardActivity.Valve>) :
     RecyclerView.Adapter<ActiveValvesAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -33,4 +33,12 @@ class ActiveValvesAdapter(private val valves: List<DashboardActivity.Valve>) :
     }
 
     override fun getItemCount() = valves.size
+
+    /**
+     * Update the list of valves and refresh the adapter
+     */
+    fun updateValves(newValves: List<DashboardActivity.Valve>) {
+        valves = newValves
+        notifyDataSetChanged()
+    }
 }

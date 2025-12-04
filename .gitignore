@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Claude Code configuration
+.claude/
+
+# Docker installation script
+install-docker.sh
