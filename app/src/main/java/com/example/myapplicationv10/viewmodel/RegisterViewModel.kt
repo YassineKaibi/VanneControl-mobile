@@ -26,8 +26,17 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     val registerState: StateFlow<NetworkResult<AuthResponse>> = _registerState.asStateFlow()
 
     // État de validation des champs
+    private val _firstNameError = MutableStateFlow<String?>(null)
+    val firstNameError: StateFlow<String?> = _firstNameError.asStateFlow()
+
+    private val _lastNameError = MutableStateFlow<String?>(null)
+    val lastNameError: StateFlow<String?> = _lastNameError.asStateFlow()
+
     private val _emailError = MutableStateFlow<String?>(null)
     val emailError: StateFlow<String?> = _emailError.asStateFlow()
+
+    private val _phoneError = MutableStateFlow<String?>(null)
+    val phoneError: StateFlow<String?> = _phoneError.asStateFlow()
 
     private val _passwordError = MutableStateFlow<String?>(null)
     val passwordError: StateFlow<String?> = _passwordError.asStateFlow()
@@ -38,27 +47,35 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     /**
      * Inscription d'un nouvel utilisateur
      *
+     * @param firstName Prénom de l'utilisateur
+     * @param lastName Nom de famille de l'utilisateur
      * @param email Email de l'utilisateur
+     * @param phone Numéro de téléphone
      * @param password Mot de passe
      * @param confirmPassword Confirmation du mot de passe
      */
-    fun register(email: String, password: String, confirmPassword: String) {
+    fun register(
+        firstName: String,
+        lastName: String,
+        email: String,
+        phone: String,
+        password: String,
+        confirmPassword: String
+    ) {
         // Valider les champs
-        if (!validateInput(email, password, confirmPassword)) {
+        if (!validateInput(firstName, lastName, email, phone, password, confirmPassword)) {
             return
         }
 
         // Effacer les erreurs précédentes
-        _emailError.value = null
-        _passwordError.value = null
-        _confirmPasswordError.value = null
+        clearErrors()
 
         // Afficher le chargement
         _registerState.value = NetworkResult.Loading
 
-        // Effectuer l'inscription
+        // Effectuer l'inscription avec les nouvelles données
         viewModelScope.launch {
-            val result = authRepository.register(email, password)
+            val result = authRepository.register(firstName, lastName, email, phone, password)
             _registerState.value = result
         }
     }
@@ -67,11 +84,36 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
      * Valider les champs de saisie
      */
     private fun validateInput(
+        firstName: String,
+        lastName: String,
         email: String,
+        phone: String,
         password: String,
         confirmPassword: String
     ): Boolean {
         var isValid = true
+
+        // Validation du prénom
+        if (firstName.isEmpty()) {
+            _firstNameError.value = "Prénom requis"
+            isValid = false
+        } else if (firstName.length < 2) {
+            _firstNameError.value = "Prénom trop court (min. 2 caractères)"
+            isValid = false
+        } else {
+            _firstNameError.value = null
+        }
+
+        // Validation du nom de famille
+        if (lastName.isEmpty()) {
+            _lastNameError.value = "Nom requis"
+            isValid = false
+        } else if (lastName.length < 2) {
+            _lastNameError.value = "Nom trop court (min. 2 caractères)"
+            isValid = false
+        } else {
+            _lastNameError.value = null
+        }
 
         // Validation de l'email
         if (email.isEmpty()) {
@@ -82,6 +124,17 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             isValid = false
         } else {
             _emailError.value = null
+        }
+
+        // Validation du téléphone
+        if (phone.isEmpty()) {
+            _phoneError.value = "Numéro de téléphone requis"
+            isValid = false
+        } else if (phone.length < 8) {
+            _phoneError.value = "Numéro de téléphone invalide"
+            isValid = false
+        } else {
+            _phoneError.value = null
         }
 
         // Validation du mot de passe
@@ -110,12 +163,22 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
+     * Effacer toutes les erreurs
+     */
+    private fun clearErrors() {
+        _firstNameError.value = null
+        _lastNameError.value = null
+        _emailError.value = null
+        _phoneError.value = null
+        _passwordError.value = null
+        _confirmPasswordError.value = null
+    }
+
+    /**
      * Réinitialiser l'état d'inscription
      */
     fun resetState() {
         _registerState.value = NetworkResult.Idle
-        _emailError.value = null
-        _passwordError.value = null
-        _confirmPasswordError.value = null
+        clearErrors()
     }
 }

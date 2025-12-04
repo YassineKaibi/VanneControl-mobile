@@ -382,7 +382,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/mail"
                         android:layout_marginEnd="16dp"
                         android:contentDescription="Email" />
 
@@ -428,7 +428,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/phone"
                         android:layout_marginEnd="16dp"
                         android:contentDescription="Phone" />
 
@@ -474,7 +474,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/location"
                         android:layout_marginEnd="16dp"
                         android:contentDescription="Location" />
 

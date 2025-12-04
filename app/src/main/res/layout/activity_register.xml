@@ -72,29 +72,34 @@
                 android:layout_height="wrap_content"
                 tools:ignore="MissingConstraints">
 
+                <!-- First Name -->
                 <EditText
-                    android:id="@+id/nameField"
+                    android:id="@+id/firstNameField"
                     android:layout_width="0dp"
                     android:layout_height="50dp"
                     android:background="@drawable/edittext_background"
-                    android:hint="Name"
+                    android:hint="First Name"
+                    android:inputType="textPersonName"
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <!-- Last Name -->
                 <EditText
-                    android:id="@+id/usernameField"
+                    android:id="@+id/lastNameField"
                     android:layout_width="0dp"
                     android:layout_height="50dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/edittext_background"
-                    android:hint="Username"
+                    android:hint="Last Name"
+                    android:inputType="textPersonName"
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/nameField" />
+                    app:layout_constraintTop_toBottomOf="@id/firstNameField" />
 
+                <!-- Email -->
                 <EditText
                     android:id="@+id/emailField"
                     android:layout_width="0dp"
@@ -102,11 +107,27 @@
                     android:layout_marginTop="10dp"
                     android:background="@drawable/edittext_background"
                     android:hint="Email"
+                    android:inputType="textEmailAddress"
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/usernameField" />
+                    app:layout_constraintTop_toBottomOf="@id/lastNameField" />
 
+                <!-- Phone -->
+                <EditText
+                    android:id="@+id/phoneField"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="Phone Number"
+                    android:inputType="phone"
+                    android:padding="12dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/emailField" />
+
+                <!-- Password -->
                 <EditText
                     android:id="@+id/passwordField"
                     android:layout_width="0dp"
@@ -118,8 +139,9 @@
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/emailField" />
+                    app:layout_constraintTop_toBottomOf="@id/phoneField" />
 
+                <!-- Confirm Password -->
                 <EditText
                     android:id="@+id/confirmPasswordField"
                     android:layout_width="0dp"
@@ -133,6 +155,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/passwordField" />
 
+                <!-- Register Button -->
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/registerButton"
                     android:layout_width="0dp"
@@ -147,10 +170,12 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/confirmPasswordField" />
 
+                <!-- Already have account text -->
                 <TextView
                     android:id="@+id/haveAccount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="15dp"
                     android:layout_marginBottom="15dp"
                     android:text="Already have an account? Sign in"
                     android:textColor="@color/black"
@@ -159,7 +184,8 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/registerButton" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>

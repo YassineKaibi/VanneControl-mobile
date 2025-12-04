@@ -19,6 +19,7 @@ import com.example.myapplicationv10.viewmodel.LoginViewModel
 import com.example.myapplicationv10.websocket.WebSocketManager
 import kotlinx.coroutines.launch
 
+
 /**
  * LoginActivity - Écran de connexion avec MVVM
  *
@@ -50,12 +51,14 @@ class LoginActivity : AppCompatActivity() {
         initializeViews()
         setupClickListeners()
         observeViewModel()
-
+        /*
         // Vérifier si l'utilisateur est déjà connecté
         if (viewModel.isLoggedIn()) {
             navigateToDashboard()
         }
+        */
     }
+
 
     private fun initializeViews() {
         emailField = findViewById(R.id.emailField)
