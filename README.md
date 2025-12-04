@@ -73,12 +73,14 @@ app/src/main/java/com/example/myapplicationv10/
 ├── repository/
 │   ├── AuthRepository.kt       # Authentication logic
 │   ├── DeviceRepository.kt     # Device data operations
+│   ├── UserRepository.kt       # User profile operations
 │   └── PistonRepository.kt     # Piston control operations
 ├── viewmodel/
 │   ├── LoginViewModel.kt
 │   ├── RegisterViewModel.kt
 │   ├── DashboardViewModel.kt
-│   └── ValveManagementViewModel.kt
+│   ├── ValveManagementViewModel.kt
+│   └── ProfileViewModel.kt
 ├── websocket/
 │   ├── WebSocketManager.kt     # WebSocket connection handler
 │   └── WebSocketMessage.kt     # WebSocket message models
@@ -156,6 +158,10 @@ The app expects a backend API with the following endpoints:
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 
+### User Management
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
+
 ### Device Management
 - `GET /api/devices` - List all devices
 - `GET /api/devices/{id}` - Get device details
@@ -176,13 +182,15 @@ The app expects a backend API with the following endpoints:
 4. **Network Security Config**: Enforced HTTPS (with development exceptions)
 5. **Password Security**: Passwords handled securely (never logged or stored locally)
 
-## Recent Updates (MultiThreading Branch)
+## Recent Updates
 
 - Migrated from ExecutorService to Kotlin Coroutines for better async handling
 - Implemented MVVM architecture with Repository pattern
 - Added WebSocket support for real-time updates
 - Enhanced security with encrypted SharedPreferences
 - Improved error handling with NetworkResult wrapper
+- Fixed Kotlin deprecation warnings
+- Added proper state management with Idle states
 
 ## Development
 
