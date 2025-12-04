@@ -22,7 +22,7 @@ object Constants {
      * 1. Use HTTPS with a self-signed certificate, OR
      * 2. Add network_security_config.xml to allow cleartext for development only
      */
-    const val BASE_URL = "http://10.0.2.2:8080/"  // TODO: Change to HTTPS for production!
+    const val BASE_URL = "http://4.165.39.94:8080/"  // TODO: Change to HTTPS for production!
 
     /**
      * Timeout pour les connexions réseau (en secondes)
@@ -87,7 +87,7 @@ object Constants {
      * - Pour développement local: "ws://10.0.2.2:8080/ws"
      * - Pour production: Remplacer par votre URL WSS réelle
      */
-    const val WEBSOCKET_URL = "ws://10.0.2.2:8080/ws"
+    const val WEBSOCKET_URL = "ws://4.165.39.94:8080/ws"
 
     /**
      * Types de messages WebSocket

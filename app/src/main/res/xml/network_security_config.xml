@@ -12,7 +12,7 @@
         <domain includeSubdomains="false">127.0.0.1</domain>
         <!-- Add your development machine IP here if testing on physical device -->
         <!-- <domain includeSubdomains="false">192.168.1.xxx</domain> -->
-	<domain includeSubdomains="false">192.168.1.133</domain>
+	<domain includeSubdomains="false">4.165.39.94</domain>
     </domain-config>
 
     <!--
