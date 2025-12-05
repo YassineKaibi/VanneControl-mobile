@@ -58,7 +58,7 @@
     <string name="no">Non</string>
     <string name="cancel">Annuler</string>
     <string name="open">Ouvrir</string>
-    <string name="close">Fermer</string>
+    <string name="close_valve">Fermer</string>
     <string name="opened">Ouverte</string>
     <string name="closed">Fermée</string>
 
@@ -116,7 +116,7 @@
 
     <!-- Common -->
     <string name="back">Retour</string>
-    <string name="close">Fermer</string>
+    <string name="close_button">Fermer</string>
     <string name="ok">OK</string>
     <string name="error">Erreur</string>
     <string name="success">Succès</string>
