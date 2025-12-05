@@ -197,63 +197,63 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun saveProfile() {
         if (validateInputs()) {
-            // Récupérer les valeurs
-            val firstName = firstNameEdit.text.toString().trim()
-            val lastName = lastNameEdit.text.toString().trim()
-            val dateOfBirth = dateOfBirthEdit.text.toString().trim()
-            val email = emailEdit.text.toString().trim()
-            val phone = phoneEdit.text.toString().trim()
-            val location = locationEdit.text.toString().trim()
-            val numberOfValves = numberOfValvesEdit.text.toString().trim().toIntOrNull() ?: 8
+        // Récupérer les valeurs
+        val firstName = firstNameEdit.text.toString().trim()
+        val lastName = lastNameEdit.text.toString().trim()
+        val dateOfBirth = dateOfBirthEdit.text.toString().trim()
+        val email = emailEdit.text.toString().trim()
+        val phone = phoneEdit.text.toString().trim()
+        val location = locationEdit.text.toString().trim()
+        val numberOfValves = numberOfValvesEdit.text.toString().trim().toIntOrNull() ?: 8
 
-            // TODO: Sauvegarder dans la base de données
-            // TODO: Envoyer au backend via API
+        // TODO: Sauvegarder dans la base de données
+        // TODO: Envoyer au backend via API
 
-            // Afficher un message de succès
-            Snackbar.make(
-                findViewById(android.R.id.content),
-                "Profile updated successfully!",
-                Snackbar.LENGTH_LONG
-            ).show()
+        // Afficher un message de succès
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            "Profile updated successfully!",
+            Snackbar.LENGTH_LONG
+        ).show()
 
-            // Retourner à ProfileActivity avec les nouvelles données
-            val resultIntent = Intent()
-            resultIntent.putExtra("firstName", firstName)
-            resultIntent.putExtra("lastName", lastName)
-            resultIntent.putExtra("dateOfBirth", dateOfBirth)
-            resultIntent.putExtra("email", email)
-            resultIntent.putExtra("phone", phone)
-            resultIntent.putExtra("location", location)
-            resultIntent.putExtra("numberOfValves", numberOfValves)
-            setResult(RESULT_OK, resultIntent)
+        // Retourner à ProfileActivity avec les nouvelles données
+        val resultIntent = Intent()
+        resultIntent.putExtra("firstName", firstName)
+        resultIntent.putExtra("lastName", lastName)
+        resultIntent.putExtra("dateOfBirth", dateOfBirth)
+        resultIntent.putExtra("email", email)
+        resultIntent.putExtra("phone", phone)
+        resultIntent.putExtra("location", location)
+        resultIntent.putExtra("numberOfValves", numberOfValves)
+        setResult(RESULT_OK, resultIntent)
 
-            // Attendre un peu avant de fermer pour montrer le message
-            findViewById<android.view.View>(android.R.id.content).postDelayed({
-                finish()
-            }, 1500)
-        }
+        // Attendre un peu avant de fermer pour montrer le message
+        findViewById<android.view.View>(android.R.id.content).postDelayed({
+            finish()
+        }, 1500)
+    }
+}
+
+private fun validateInputs(): Boolean {
+    var isValid = true
+
+    // Validation First Name
+    if (firstNameEdit.text.toString().trim().isEmpty()) {
+        firstNameEdit.error = "First name is required"
+        isValid = false
     }
 
-    private fun validateInputs(): Boolean {
-        var isValid = true
+    // Validation Last Name
+    if (lastNameEdit.text.toString().trim().isEmpty()) {
+        lastNameEdit.error = "Last name is required"
+        isValid = false
+    }
 
-        // Validation First Name
-        if (firstNameEdit.text.toString().trim().isEmpty()) {
-            firstNameEdit.error = "First name is required"
-            isValid = false
-        }
-
-        // Validation Last Name
-        if (lastNameEdit.text.toString().trim().isEmpty()) {
-            lastNameEdit.error = "Last name is required"
-            isValid = false
-        }
-
-        // Validation Date of Birth
-        if (dateOfBirthEdit.text.toString().trim().isEmpty()) {
-            dateOfBirthEdit.error = "Date of birth is required"
-            isValid = false
-        }
+    // Validation Date of Birth
+    if (dateOfBirthEdit.text.toString().trim().isEmpty()) {
+        dateOfBirthEdit.error = "Date of birth is required"
+        isValid = false
+    }
 
         // Validation Email
         val email = emailEdit.text.toString().trim()
