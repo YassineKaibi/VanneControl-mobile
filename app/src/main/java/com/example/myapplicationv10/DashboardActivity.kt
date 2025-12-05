@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
  * Observe les StateFlow pour mettre à jour l'UI de manière réactive
  * Intègre le WebSocket pour les mises à jour en temps réel
  */
-class DashboardActivity : AppCompatActivity() {
+class DashboardActivity : BaseActivity() {
 
     private lateinit var activeValvesRecyclerView: RecyclerView
     private lateinit var activeValvesAdapter: ActiveValvesAdapter

@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  * Utilise RegisterViewModel pour gérer l'inscription
  * Observe les StateFlow pour mettre à jour l'UI de manière réactive
  */
-class RegisterActivity : AppCompatActivity() {
+class RegisterActivity : BaseActivity() {
 
     private lateinit var firstNameField: EditText
     private lateinit var lastNameField: EditText

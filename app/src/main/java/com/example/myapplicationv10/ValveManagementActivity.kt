@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  * Observe les StateFlow pour mettre à jour l'UI de manière réactive
  * Intègre le WebSocket pour les mises à jour en temps réel
  */
-class ValveManagementActivity : AppCompatActivity() {
+class ValveManagementActivity : BaseActivity() {
 
     // ViewModel
     private val viewModel: ValveManagementViewModel by viewModels()

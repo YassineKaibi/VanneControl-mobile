@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  * Utilise LoginViewModel pour gérer l'authentification
  * Observe les StateFlow pour mettre à jour l'UI de manière réactive
  */
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseActivity() {
 
     private lateinit var emailField: EditText
     private lateinit var passwordField: EditText

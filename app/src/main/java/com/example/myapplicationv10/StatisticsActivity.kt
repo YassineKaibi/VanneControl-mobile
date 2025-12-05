@@ -20,7 +20,7 @@ import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.*
 
-class StatisticsActivity : AppCompatActivity() {
+class StatisticsActivity : BaseActivity() {
 
     private lateinit var lineChart: LineChart
     private lateinit var periodSpinner: Spinner

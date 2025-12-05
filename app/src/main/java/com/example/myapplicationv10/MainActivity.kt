@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     // Déclaration du bouton au niveau de la classe
     private lateinit var startButton: Button
