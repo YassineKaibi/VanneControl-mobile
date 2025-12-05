@@ -1,36 +1,27 @@
 package com.example.myapplicationv10
 
-import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.Window
-import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.example.myapplicationv10.utils.LocaleHelper
+import com.google.android.material.button.MaterialButton
 
 class ProfileActivity : BaseActivity() {
 
     private lateinit var backButton: View
-    private lateinit var closeButton: View
     private lateinit var personalInfoTab: TextView
     private lateinit var teamsTab: TextView
     private lateinit var personalInfoSection: LinearLayout
     private lateinit var systemSection: LinearLayout
-    private lateinit var languageRow: LinearLayout
-    private lateinit var languageValueText: TextView
-    private lateinit var logoutRow: LinearLayout
+    private lateinit var logoutButton: MaterialButton
 
     // User info views
     private lateinit var firstNameValue: TextView
     private lateinit var lastNameValue: TextView
     private lateinit var emailValue: TextView
-    private lateinit var phoneValue: TextView
+    private lateinit var phoneNumberValue: TextView
     private lateinit var locationValue: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,32 +30,26 @@ class ProfileActivity : BaseActivity() {
 
         initializeViews()
         setupTabNavigation()
-        setupLanguageSelector()
         setupLogout()
         loadUserData()
-        updateLanguageDisplay()
     }
 
     private fun initializeViews() {
         backButton = findViewById(R.id.backButton)
-        closeButton = findViewById(R.id.closeButton)
         personalInfoTab = findViewById(R.id.personalInfoTab)
         teamsTab = findViewById(R.id.teamsTab)
         personalInfoSection = findViewById(R.id.personalInfoSection)
         systemSection = findViewById(R.id.systemSection)
-        languageRow = findViewById(R.id.languageRow)
-        languageValueText = findViewById(R.id.languageValue)
-        logoutRow = findViewById(R.id.logoutRow)
+        logoutButton = findViewById(R.id.logoutButton)
 
         // User info
         firstNameValue = findViewById(R.id.firstNameValue)
         lastNameValue = findViewById(R.id.lastNameValue)
         emailValue = findViewById(R.id.emailValue)
-        phoneValue = findViewById(R.id.phoneValue)
+        phoneNumberValue = findViewById(R.id.phoneNumberValue)
         locationValue = findViewById(R.id.locationValue)
 
         backButton.setOnClickListener { finish() }
-        closeButton.setOnClickListener { finish() }
     }
 
     private fun setupTabNavigation() {
@@ -106,75 +91,8 @@ class ProfileActivity : BaseActivity() {
         personalInfoTab.setTypeface(null, android.graphics.Typeface.NORMAL)
     }
 
-    private fun setupLanguageSelector() {
-        languageRow.setOnClickListener {
-            showLanguageDialog()
-        }
-    }
-
-    private fun showLanguageDialog() {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.dialog_language_selector)
-        dialog.window?.setBackgroundDrawableResource(android.R.drawable.dialog_holo_light_frame)
-
-        val radioGroup = dialog.findViewById<RadioGroup>(R.id.languageRadioGroup)
-        val radioEnglish = dialog.findViewById<RadioButton>(R.id.radioEnglish)
-        val radioFrench = dialog.findViewById<RadioButton>(R.id.radioFrench)
-        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
-        val confirmButton = dialog.findViewById<Button>(R.id.confirmButton)
-
-        // Set current language selection
-        val currentLanguage = LocaleHelper.getLanguage(this)
-        when (currentLanguage) {
-            "en" -> radioEnglish.isChecked = true
-            "fr" -> radioFrench.isChecked = true
-        }
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        confirmButton.setOnClickListener {
-            val selectedLanguage = when (radioGroup.checkedRadioButtonId) {
-                R.id.radioEnglish -> "en"
-                R.id.radioFrench -> "fr"
-                else -> "en"
-            }
-
-            if (selectedLanguage != currentLanguage) {
-                changeLanguage(selectedLanguage)
-            }
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
-    private fun changeLanguage(languageCode: String) {
-        // Save language preference
-        LocaleHelper.setLocale(this, languageCode)
-
-        // Show success message
-        Toast.makeText(this, getString(R.string.language_changed), Toast.LENGTH_SHORT).show()
-
-        // Restart the activity to apply changes
-        recreate()
-
-        // Optionally, restart the entire app to apply language to all activities
-        // val intent = Intent(this, MainActivity::class.java)
-        // intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        // startActivity(intent)
-        // finish()
-    }
-
-    private fun updateLanguageDisplay() {
-        val currentLanguage = LocaleHelper.getLanguage(this)
-        languageValueText.text = LocaleHelper.getLanguageName(currentLanguage)
-    }
-
     private fun setupLogout() {
-        logoutRow.setOnClickListener {
+        logoutButton.setOnClickListener {
             showLogoutConfirmation()
         }
     }
@@ -209,7 +127,7 @@ class ProfileActivity : BaseActivity() {
         firstNameValue.text = prefs.getString("user_first_name", "Yassine") ?: "Yassine"
         lastNameValue.text = prefs.getString("user_last_name", "Kaibi") ?: "Kaibi"
         emailValue.text = prefs.getString("user_email", "yassine@example.com") ?: "yassine@example.com"
-        phoneValue.text = prefs.getString("user_phone", "+216 12 345 678") ?: "+216 12 345 678"
+        phoneNumberValue.text = prefs.getString("user_phone", "+216 12 345 678") ?: "+216 12 345 678"
         locationValue.text = prefs.getString("user_location", "Sfax, Tunisia") ?: "Sfax, Tunisia"
     }
 }
