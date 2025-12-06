@@ -48,6 +48,12 @@ android {
         }
     }
 }
+android {
+
+    buildFeatures {
+        viewBinding=true
+    }
+}
 
 dependencies {
 
