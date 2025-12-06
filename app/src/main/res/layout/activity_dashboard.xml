@@ -24,7 +24,7 @@
         <TextView android:id="@+id/welcome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to "
+            android:text="@string/welcome"
             android:textColor="@color/black"
             android:textSize="28sp"
             android:textStyle="bold"
@@ -49,7 +49,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
-            android:text="Control Panel"
+            android:text="@string/control_panel"
             android:textColor="@android:color/black"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -82,7 +82,7 @@
                 android:id="@+id/activeValvesTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Active Valves"
+                android:text="@string/active_valves"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -116,7 +116,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="Control Modules"
+                android:text="@string/contol_models"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -164,7 +164,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Valve Management"
+                            android:text="@string/valve_management"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -172,7 +172,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Full valve management"
+                            android:text="@string/valve_management_description"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
@@ -229,7 +229,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Valve Operation History"
+                            android:text="@string/valve_operation_history"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -237,7 +237,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Detailed valve activation logs"
+                            android:text="@string/valve_operation_history_description"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
@@ -294,7 +294,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Usage Statistics"
+                            android:text="@string/usage_statistics"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -302,7 +302,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Detailed valve usage reports"
+                            android:text="@string/usage_statistics_description"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
@@ -360,7 +360,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Alerts &amp; Notifications"
+                            android:text="@string/alerts_and_notifications"
                             android:textColor="@color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -368,7 +368,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Review system telemetry and alerts"
+                            android:text="@string/alerts_and_notifications_description"
                             android:textColor="#666666"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />

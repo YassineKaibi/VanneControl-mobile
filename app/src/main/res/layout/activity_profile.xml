@@ -37,7 +37,7 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="My Profile"
+            android:text="@string/profile_title"
             android:textStyle="bold"
             android:textSize="18sp"
             android:textColor="@color/black"
@@ -50,7 +50,7 @@
             android:id="@+id/editButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Edit"
+            android:text="@string/edit_profile"
             android:textStyle="bold"
             android:textSize="16sp"
             android:textColor="@color/green"
@@ -210,7 +210,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="System"
+                    android:text="@string/system"
                     android:textSize="14sp"
                     android:textColor="#999999"
                     android:gravity="center"
@@ -257,7 +257,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="First Name"
+                            android:text="@string/first_name"
                             android:textColor="#999999"
                             android:textSize="13sp" />
 
@@ -303,7 +303,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Last Name"
+                            android:text="@string/last_name"
                             android:textColor="#999999"
                             android:textSize="13sp" />
 
@@ -349,7 +349,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Date of Birth"
+                            android:text="@string/date_of_birth"
                             android:textColor="#999999"
                             android:textSize="13sp" />
 
@@ -371,20 +371,21 @@
                     android:layout_marginStart="40dp" />
 
                 <!-- Email -->
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingTop="20dp"
-                    android:paddingBottom="20dp"
-                    android:gravity="center_vertical">
+                    android:paddingBottom="20dp">
 
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/mail"
                         android:layout_marginEnd="16dp"
-                        android:contentDescription="Email" />
+                        android:contentDescription="Email"
+                        android:src="@drawable/mail" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -395,7 +396,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Email"
+                            android:text="@string/email"
                             android:textColor="#999999"
                             android:textSize="13sp" />
 
@@ -403,10 +404,10 @@
                             android:id="@+id/emailValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="admin@vannecontrol.com"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:layout_marginTop="4dp" />
+                            android:textSize="16sp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -441,7 +442,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Phone"
+                            android:text="@string/phone"
                             android:textColor="#999999"
                             android:textSize="13sp" />
 
@@ -487,7 +488,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Location"
+                            android:text="@string/location"
                             android:textColor="#999999"
                             android:textSize="13sp" />
 
@@ -536,7 +537,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Number of Controlled Valves"
+                        android:text="@string/number_of_controlled_valves"
                         android:textColor="#999999"
                         android:textSize="13sp" />
 
@@ -566,7 +567,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="32dp"
-                android:text="Logout"
+                android:text="@string/logout"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textAllCaps="false"
