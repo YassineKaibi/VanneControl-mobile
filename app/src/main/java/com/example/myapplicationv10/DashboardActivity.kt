@@ -91,6 +91,12 @@ class DashboardActivity : BaseActivity() {
             }
         }
 
+        binding.timingPlanCard.setOnClickListener {
+            // Nouvelle action pour Timing Plan
+            val intent = Intent(this, TimingPlanActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.historyCard.setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java))
         }

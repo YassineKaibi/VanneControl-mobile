@@ -17,9 +17,9 @@
     <string name="no_account">Don\'t have an account? Sign up now</string>
 
     /*
-        <string name="login_error">Login failed. Please check your credentials.</string>
-        <string name="email_required">Email is required</string>
-        <string name="password_required">Password is required</string>
+    <string name="login_error">Login failed. Please check your credentials.</string>
+    <string name="email_required">Email is required</string>
+    <string name="password_required">Password is required</string>
     */
     <!-- Register Activity -->
     <string name="register_title">User Registration</string>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- SEGMENTED BUTTON -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/segmentTop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/segVanne"
+                android:text="Sélection vanne"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:checked="true"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/segStart"
+                android:text="Date début"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/segEnd"
+                android:text="Date fin"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <!-- =============================== -->
+        <!--   SECTION CHOIX DES VANNES     -->
+        <!-- =============================== -->
+        <LinearLayout
+            android:id="@+id/sectionVannes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Choisir une vanne"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- 8 boutons affichés en blocs -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="4"
+                android:rowCount="2"
+                android:alignmentMode="alignMargins"
+                android:useDefaultMargins="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v1"
+                    android:text="1"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v2"
+                    android:text="2"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v3"
+                    android:text="3"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v4"
+                    android:text="4"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v5"
+                    android:text="5"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v6"
+                    android:text="6"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v7"
+                    android:text="7"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/v8"
+                    android:text="8"
+                    style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+            </GridLayout>
+
+        </LinearLayout>
+
+        <!-- =============================== -->
+        <!--   SECTION DATE / HEURE DÉBUT   -->
+        <!-- =============================== -->
+        <LinearLayout
+            android:id="@+id/sectionStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/startSelected"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Aucune date/heure sélectionnée"
+                android:textSize="16sp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/pickStart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sélectionner Date + Heure" />
+
+        </LinearLayout>
+
+        <!-- =============================== -->
+        <!--   SECTION DATE / HEURE FIN     -->
+        <!-- =============================== -->
+        <LinearLayout
+            android:id="@+id/sectionEnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/endSelected"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Aucune date/heure sélectionnée"
+                android:textSize="16sp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/pickEnd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sélectionner Date + Heure" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
