@@ -26,6 +26,12 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     val registerState: StateFlow<NetworkResult<AuthResponse>> = _registerState.asStateFlow()
 
     // État de validation des champs
+    private val _firstNameError = MutableStateFlow<String?>(null)
+    val firstNameError: StateFlow<String?> = _firstNameError.asStateFlow()
+
+    private val _lastNameError = MutableStateFlow<String?>(null)
+    val lastNameError: StateFlow<String?> = _lastNameError.asStateFlow()
+
     private val _emailError = MutableStateFlow<String?>(null)
     val emailError: StateFlow<String?> = _emailError.asStateFlow()
 
@@ -38,17 +44,21 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     /**
      * Inscription d'un nouvel utilisateur
      *
+     * @param firstName Prénom de l'utilisateur
+     * @param lastName Nom de famille de l'utilisateur
      * @param email Email de l'utilisateur
      * @param password Mot de passe
      * @param confirmPassword Confirmation du mot de passe
      */
-    fun register(email: String, password: String, confirmPassword: String) {
+    fun register(firstName: String, lastName: String, email: String, password: String, confirmPassword: String) {
         // Valider les champs
-        if (!validateInput(email, password, confirmPassword)) {
+        if (!validateInput(firstName, lastName, email, password, confirmPassword)) {
             return
         }
 
         // Effacer les erreurs précédentes
+        _firstNameError.value = null
+        _lastNameError.value = null
         _emailError.value = null
         _passwordError.value = null
         _confirmPasswordError.value = null
@@ -58,7 +68,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Effectuer l'inscription
         viewModelScope.launch {
-            val result = authRepository.register(email, password)
+            val result = authRepository.register(firstName, lastName, email, password)
             _registerState.value = result
         }
     }
@@ -67,11 +77,29 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
      * Valider les champs de saisie
      */
     private fun validateInput(
+        firstName: String,
+        lastName: String,
         email: String,
         password: String,
         confirmPassword: String
     ): Boolean {
         var isValid = true
+
+        // Validation du prénom
+        if (firstName.isEmpty()) {
+            _firstNameError.value = "First name required"
+            isValid = false
+        } else {
+            _firstNameError.value = null
+        }
+
+        // Validation du nom de famille
+        if (lastName.isEmpty()) {
+            _lastNameError.value = "Last name required"
+            isValid = false
+        } else {
+            _lastNameError.value = null
+        }
 
         // Validation de l'email
         if (email.isEmpty()) {
@@ -114,6 +142,8 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
      */
     fun resetState() {
         _registerState.value = NetworkResult.Idle
+        _firstNameError.value = null
+        _lastNameError.value = null
         _emailError.value = null
         _passwordError.value = null
         _confirmPasswordError.value = null
