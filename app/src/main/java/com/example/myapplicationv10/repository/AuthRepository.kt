@@ -47,14 +47,16 @@ class AuthRepository(private val context: Context) {
     /**
      * Inscription d'un nouvel utilisateur
      *
+     * @param firstName Prénom de l'utilisateur
+     * @param lastName Nom de famille de l'utilisateur
      * @param email Email de l'utilisateur
      * @param password Mot de passe
      * @return NetworkResult avec AuthResponse en cas de succès
      */
-    suspend fun register(email: String, password: String): NetworkResult<AuthResponse> {
+    suspend fun register(firstName: String, lastName: String, email: String, password: String): NetworkResult<AuthResponse> {
         return withContext(Dispatchers.IO) {
             val result = ApiClient.safeApiCall {
-                apiService.register(RegisterRequest(email, password))
+                apiService.register(RegisterRequest(firstName, lastName, email, password))
             }
 
             // Si succès, sauvegarder le token et les infos utilisateur
