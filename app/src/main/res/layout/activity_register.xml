@@ -73,27 +73,27 @@
                 tools:ignore="MissingConstraints">
 
                 <EditText
-                    android:id="@+id/nameField"
+                    android:id="@+id/firstNameField"
                     android:layout_width="0dp"
                     android:layout_height="50dp"
                     android:background="@drawable/edittext_background"
-                    android:hint="Name"
+                    android:hint="First Name"
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <EditText
-                    android:id="@+id/usernameField"
+                    android:id="@+id/lastNameField"
                     android:layout_width="0dp"
                     android:layout_height="50dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/edittext_background"
-                    android:hint="Username"
+                    android:hint="Last Name"
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/nameField" />
+                    app:layout_constraintTop_toBottomOf="@id/firstNameField" />
 
                 <EditText
                     android:id="@+id/emailField"
@@ -105,7 +105,7 @@
                     android:padding="12dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/usernameField" />
+                    app:layout_constraintTop_toBottomOf="@id/lastNameField" />
 
                 <EditText
                     android:id="@+id/passwordField"
