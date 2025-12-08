@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
  */
 class RegisterActivity : AppCompatActivity() {
 
+    private lateinit var firstNameField: EditText
+    private lateinit var lastNameField: EditText
     private lateinit var emailField: EditText
     private lateinit var passwordField: EditText
     private lateinit var confirmPasswordField: EditText
@@ -43,6 +45,8 @@ class RegisterActivity : AppCompatActivity() {
     private fun initializeViews() {
         // Note: Ces IDs doivent correspondre à votre layout XML
         // Si les IDs sont différents, ajustez-les
+        firstNameField = findViewById(R.id.firstNameField)
+        lastNameField = findViewById(R.id.lastNameField)
         emailField = findViewById(R.id.emailField)
         passwordField = findViewById(R.id.passwordField)
         confirmPasswordField = findViewById(R.id.confirmPasswordField)
@@ -53,11 +57,13 @@ class RegisterActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         // Clic sur "S'inscrire"
         registerButton.setOnClickListener {
+            val firstName = firstNameField.text.toString().trim()
+            val lastName = lastNameField.text.toString().trim()
             val email = emailField.text.toString().trim()
             val password = passwordField.text.toString().trim()
             val confirmPassword = confirmPasswordField.text.toString().trim()
 
-            viewModel.register(email, password, confirmPassword)
+            viewModel.register(firstName, lastName, email, password, confirmPassword)
         }
 
         // Clic sur "Already have an account? Sign in"
@@ -113,6 +119,18 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         // Observer les erreurs de champs
+        lifecycleScope.launch {
+            viewModel.firstNameError.collect { error ->
+                firstNameField.error = error
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.lastNameError.collect { error ->
+                lastNameField.error = error
+            }
+        }
+
         lifecycleScope.launch {
             viewModel.emailError.collect { error ->
                 emailField.error = error
