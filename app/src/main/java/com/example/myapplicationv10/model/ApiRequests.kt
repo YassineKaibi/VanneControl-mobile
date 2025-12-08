@@ -21,6 +21,12 @@ data class LoginRequest(
  * RegisterRequest - Corps de la requête pour l'inscription
  */
 data class RegisterRequest(
+    @SerializedName("firstName")
+    val firstName: String,
+
+    @SerializedName("lastName")
+    val lastName: String,
+
     @SerializedName("email")
     val email: String,
 
