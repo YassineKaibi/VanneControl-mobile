@@ -44,6 +44,8 @@ class RegisterActivity : BaseActivity() {
     }
 
     private fun initializeViews() {
+        // Note: Ces IDs doivent correspondre à votre layout XML
+        // Si les IDs sont différents, ajustez-les
         firstNameField = findViewById(R.id.firstNameField)
         lastNameField = findViewById(R.id.lastNameField)
         emailField = findViewById(R.id.emailField)
