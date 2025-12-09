@@ -66,3 +66,54 @@ data class ErrorResponse(
     @SerializedName("message")
     val message: String? = null
 )
+
+/**
+ * ScheduleResponse - Réponse contenant un planning
+ */
+data class ScheduleResponse(
+    @SerializedName("id")
+    val id: String,
+
+    @SerializedName("name")
+    val name: String,
+
+    @SerializedName("deviceId")
+    val deviceId: String,
+
+    @SerializedName("pistonNumber")
+    val pistonNumber: Int,
+
+    @SerializedName("action")
+    val action: String,
+
+    @SerializedName("cronExpression")
+    val cronExpression: String,
+
+    @SerializedName("enabled")
+    val enabled: Boolean,
+
+    @SerializedName("userId")
+    val userId: String,
+
+    @SerializedName("createdAt")
+    val createdAt: String,
+
+    @SerializedName("updatedAt")
+    val updatedAt: String
+)
+
+/**
+ * SchedulesListResponse - Réponse contenant la liste des plannings
+ */
+data class SchedulesListResponse(
+    @SerializedName("schedules")
+    val schedules: List<ScheduleResponse>
+)
+
+/**
+ * DeleteScheduleResponse - Réponse après suppression d'un planning
+ */
+data class DeleteScheduleResponse(
+    @SerializedName("message")
+    val message: String
+)

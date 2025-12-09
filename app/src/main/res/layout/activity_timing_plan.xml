@@ -183,5 +183,17 @@
 
         </LinearLayout>
 
+        <!-- =============================== -->
+        <!--   BOUTON APPLIQUER             -->
+        <!-- =============================== -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnApplySchedule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Appliquer le planning"
+            android:textSize="16sp"
+            style="@style/Widget.Material3.Button" />
+
     </LinearLayout>
 </ScrollView>
