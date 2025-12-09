@@ -21,17 +21,23 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/segVanne"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Sélection vanne"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:checked="true"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/segStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Date début"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/segEnd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Date fin"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
@@ -64,34 +70,58 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="1"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="2"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="3"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="4"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v5"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="5"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="6"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v7"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="7"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/v8"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="8"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
 
