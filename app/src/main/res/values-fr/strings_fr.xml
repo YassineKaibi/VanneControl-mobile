@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">VanneControl</string>
+
+    <!-- Main Activity (Splash Screen) -->
+    <string name="app_title">VanneControl</string>
+    <string name="app_subtitle">Gérez facilement vos vannes à distance.</string>
+    <string name="get_started">Commencer</string>
+
+    <!-- Login Activity -->
+    <string name="login_title">Connexion</string>
+    <string name="email_hint">Adresse e-mail</string>
+    <string name="password_hint">Mot de passe</string>
+    <string name="login_button">Se connecter</string>
+    <string name="forgot_password">Mot de passe oublié ?</string>
+    <string name="no_account">Vous n\'avez pas de compte ? Inscrivez-vous</string>
+    <string name="login_error">Échec de la connexion. Vérifiez vos identifiants.</string>
+    <string name="email_required">L\'email est requis</string>
+    <string name="password_required">Le mot de passe est requis</string>
+
+    <!-- Register Activity -->
+    <string name="register_title">Inscription</string>
+    <string name="first_name_hint">Prénom</string>
+    <string name="last_name_hint">Nom</string>
+    <string name="phone_hint">Téléphone</string>
+    <string name="confirm_password_hint">Confirmer le mot de passe</string>
+    <string name="register_button">S\'inscrire</string>
+    <string name="have_account">Vous avez déjà un compte ? Connectez-vous</string>
+    <string name="registration_success">Inscription réussie !</string>
+    <string name="registration_error">Échec de l\'inscription. Réessayez.</string>
+
+    <!-- Validation errors -->
+    <string name="error_first_name_required">Le prénom est requis</string>
+    <string name="error_first_name_too_short">Prénom trop court (min. 2 caractères)</string>
+    <string name="error_last_name_required">Le nom est requis</string>
+    <string name="error_last_name_too_short">Nom trop court (min. 2 caractères)</string>
+    <string name="error_email_required">L\'email est requis</string>
+    <string name="error_email_invalid">Format d\'email invalide</string>
+    <string name="error_phone_required">Le numéro de téléphone est requis</string>
+    <string name="error_phone_invalid">Numéro de téléphone invalide (min. 8 chiffres)</string>
+    <string name="error_password_required">Le mot de passe est requis</string>
+    <string name="error_password_too_short">Mot de passe trop court (min. 6 caractères)</string>
+    <string name="error_confirm_password_required">Confirmation requise</string>
+    <string name="error_passwords_not_match">Les mots de passe ne correspondent pas</string>
+
+    <!-- Dashboard Activity -->
+    <string name="dashboard_title">Tableau de bord</string>
+    <string name="welcome">Bienvenue</string>
+    <string name="active_valves">Vannes actives</string>
+    <string name="total_valves">Total des vannes</string>
+    <string name="valve_management">Gestion des vannes</string>
+    <string name="history">Historique</string>
+    <string name="statistics">Statistiques</string>
+    <string name="profile">Profil</string>
+    <string name="logout">Déconnexion</string>
+    <string name="valve">Vanne</string>
+    <string name="active">Active</string>
+    <string name="inactive">Inactive</string>
+
+    <!-- Valve Management Activity -->
+    <string name="valve_management_title">Gestion des vannes</string>
+    <string name="control_valves">Contrôlez vos vannes</string>
+    <string name="valve_state_changed">État de la vanne modifié avec succès</string>
+    <string name="valve_state_error">Échec de la modification de l\'état de la vanne</string>
+    <string name="confirm_action">Confirmer l\'action</string>
+    <string name="confirm_open">Voulez-vous ouvrir cette vanne ?</string>
+    <string name="confirm_close">Voulez-vous fermer cette vanne ?</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="cancel">Annuler</string>
+    <string name="open">Ouvrir</string>
+    <string name="close_valve">Fermer</string>
+    <string name="opened">Ouverte</string>
+    <string name="closed">Fermée</string>
+
+    <!-- History Activity -->
+    <string name="history_title">Historique</string>
+    <string name="filter_history">Filtrer l\'historique</string>
+    <string name="select_valves">Sélectionner les vannes</string>
+    <string name="action_type">Type d\'action :</string>
+    <string name="openings">Ouvertures</string>
+    <string name="closings">Fermetures</string>
+    <string name="period">Période :</string>
+    <string name="start_date">Date de début</string>
+    <string name="end_date">Date de fin</string>
+    <string name="clear_filters">Effacer</string>
+    <string name="apply_filters">Appliquer</string>
+    <string name="no_history">Aucun historique trouvé</string>
+    <string name="loading">Chargement...</string>
+
+    <!-- Statistics Activity -->
+    <string name="statistics_title">Statistiques d\'utilisation</string>
+    <string name="export_pdf">PDF</string>
+    <string name="total_valves_card">Total des vannes</string>
+    <string name="active_now">Actives maintenant</string>
+    <string name="inactive_valves">Inactives</string>
+    <string name="maintenance">Maintenance</string>
+    <string name="activation_timeline">Chronologie d\'activation</string>
+    <string name="select_valves_chart">📊 Sélectionner les vannes à visualiser</string>
+    <string name="no_data">Aucune donnée disponible</string>
+    <string name="export_success">PDF exporté avec succès</string>
+    <string name="export_error">Échec de l\'exportation du PDF</string>
+
+    <!-- Profile Activity -->
+    <string name="profile_title">Profil</string>
+    <string name="personal_info">Informations personnelles</string>
+    <string name="system">Système</string>
+    <string name="first_name">Prénom</string>
+    <string name="last_name">Nom</string>
+    <string name="email">Email</string>
+    <string name="phone">Téléphone</string>
+    <string name="location">Localisation</string>
+    <string name="edit_profile">Modifier le profil</string>
+    <string name="save_changes">Enregistrer les modifications</string>
+    <string name="language">Langue</string>
+    <string name="language_english">English</string>
+    <string name="language_french">Français</string>
+    <string name="select_language">Sélectionner la langue</string>
+    <string name="language_changed">Langue modifiée avec succès</string>
+    <string name="notifications">Notifications</string>
+    <string name="dark_mode">Mode sombre</string>
+    <string name="app_version">Version de l\'application</string>
+    <string name="about">À propos</string>
+    <string name="privacy_policy">Politique de confidentialité</string>
+    <string name="terms_conditions">Conditions générales</string>
+    <string name="logout_confirm">Êtes-vous sûr de vouloir vous déconnecter ?</string>
+
+    <!-- Common -->
+    <string name="back">Retour</string>
+    <string name="close_button">Fermer</string>
+    <string name="ok">OK</string>
+    <string name="error">Erreur</string>
+    <string name="success">Succès</string>
+    <string name="warning">Avertissement</string>
+    <string name="info">Info</string>
+    <string name="retry">Réessayer</string>
+    <string name="refresh">Actualiser</string>
+    <string name="search">Rechercher</string>
+    <string name="filter">Filtrer</string>
+    <string name="sort">Trier</string>
+    <string name="save">Enregistrer</string>
+    <string name="delete">Supprimer</string>
+    <string name="edit">Modifier</string>
+    <string name="add">Ajouter</string>
+    <string name="remove">Retirer</string>
+    <string name="clear">Effacer</string>
+    <string name="apply">Appliquer</string>
+    <string name="select_all">Tout sélectionner</string>
+    <string name="deselect_all">Tout désélectionner</string>
+
+    <!-- Connection Status -->
+    <string name="connected">Connecté</string>
+    <string name="disconnected">Déconnecté</string>
+    <string name="connecting">Connexion en cours...</string>
+    <string name="connection_error">Erreur de connexion</string>
+    <string name="reconnecting">Reconnexion...</string>
+
+    <!-- Time Formats -->
+    <string name="today">Aujourd\'hui</string>
+    <string name="yesterday">Hier</string>
+    <string name="last_week">La semaine dernière</string>
+    <string name="last_month">Le mois dernier</string>
+
+    <!-- Valve Status -->
+    <string name="valve_status">État de la vanne</string>
+    <string name="valve_state">État</string>
+    <string name="valve_name">Nom de la vanne</string>
+    <string name="valve_number">Vanne %1$d</string>
+
+    <!-- Content Descriptions for Accessibility -->
+    <string name="content_desc_valve_icon">Icône de vanne</string>
+    <string name="content_desc_back_button">Bouton retour</string>
+    <string name="content_desc_menu">Menu</string>
+    <string name="content_desc_profile_image">Image de profil</string>
+    <string name="content_desc_close">Fermer</string>
+</resources>

@@ -1,324 +1,136 @@
 package com.example.myapplicationv10
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.example.myapplicationv10.databinding.ActivityProfileBinding
-import com.example.myapplicationv10.model.User
-import com.example.myapplicationv10.network.ApiClient
-import com.example.myapplicationv10.network.NetworkResult
-import com.example.myapplicationv10.utils.TokenManager
-import com.example.myapplicationv10.viewmodel.ProfileViewModel
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.launch
+import com.google.android.material.button.MaterialButton
 
-class ProfileActivity : AppCompatActivity() {
+class ProfileActivity : BaseActivity() {
+
 
     private lateinit var binding: ActivityProfileBinding
-    private val viewModel: ProfileViewModel by viewModels()
+    private lateinit var editProfileLauncher: ActivityResultLauncher<Intent>
 
-    // Current user data from API
-    private var currentUser: User? = null
-
-    // Activity Result Launcher for edit profile
-    private val editProfileLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                // Reload profile from API after edit
-                viewModel.loadUserProfile()
-
-                Snackbar.make(
-                    binding.root,
-                    "Profile updated successfully!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-            }
-        }
-
-    companion object {
-        private const val EDIT_PROFILE_REQUEST = 100
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialisation du ViewBinding
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Configuration des événements
-        setupTopBarEvents()
-        setupPhotoChangeButton()
-        setupTabs()
-        setupLogoutButton()
-
-        // Afficher l'onglet par défaut
-        showPersonalInfo()
-
-        // Observer les changements d'état du profil
-        observeProfileState()
-
-        // Charger les données du profil depuis l'API
-        viewModel.loadUserProfile()
-    }
-
-    // -----------------------------------------------------
-    //        OBSERVATION DES DONNÉES
-    // -----------------------------------------------------
-
-    private fun observeProfileState() {
-        lifecycleScope.launch {
-            viewModel.profileState.collect { result ->
-                when (result) {
-                    is NetworkResult.Loading -> {
-                        showLoading(true)
-                    }
-                    is NetworkResult.Success -> {
-                        showLoading(false)
-                        currentUser = result.data
-                        loadProfileData()
-                    }
-                    is NetworkResult.Error -> {
-                        showLoading(false)
-                        showError(result.message)
-                    }
-                    is NetworkResult.Idle -> {
-                        showLoading(false)
-                    }
-                }
+        // 1️⃣ Initialiser le launcher pour EditProfileActivity
+        val editProfileLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                val data = result.data!!
+                binding.firstNameValue.text = data.getStringExtra("firstName") ?: binding.firstNameValue.text
+                binding.lastNameValue.text = data.getStringExtra("lastName") ?: binding.lastNameValue.text
+                binding.dateOfBirthValue.text = data.getStringExtra("dateOfBirth") ?: binding.dateOfBirthValue.text
+                binding.emailValue.text = data.getStringExtra("email") ?: binding.emailValue.text
+                binding.phoneNumberValue.text = data.getStringExtra("phone") ?: binding.phoneNumberValue.text
+                binding.locationValue.text = data.getStringExtra("location") ?: binding.locationValue.text
+                binding.numberOfValvesValue.text = (data.getIntExtra("numberOfValves", 8)).toString()
             }
         }
-    }
 
-    private fun showLoading(isLoading: Boolean) {
-        // TODO: Add a progress bar if needed
-        binding.root.alpha = if (isLoading) 0.5f else 1.0f
-    }
+        setupBackButton()
+        setupTabNavigation()
+        setupLogout()
+        loadUserData()
 
-    private fun showError(message: String) {
-        Snackbar.make(
-            binding.root,
-            "Error: $message",
-            Snackbar.LENGTH_LONG
-        ).show()
-    }
-
-    // -----------------------------------------------------
-    //        CONFIGURATION DES ÉVÉNEMENTS
-    // -----------------------------------------------------
-
-    private fun setupTopBarEvents() {
-        // Bouton retour
-        binding.backButton.setOnClickListener {
-            finish()
-        }
-
-        // Bouton Edit
+        // 2️⃣ Lancer EditProfileActivity avec le launcher quand on clique sur editButton
         binding.editButton.setOnClickListener {
-            openEditProfile()
-        }
+            val intent = Intent(this, EditProfileActivity::class.java)
 
-        // Bouton Close (optionnel)
-        binding.closeButton.setOnClickListener {
-            finish()
-        }
-    }
+            // Passer les données actuelles
+            intent.putExtra("firstName", binding.firstNameValue.text.toString())
+            intent.putExtra("lastName", binding.lastNameValue.text.toString())
+            intent.putExtra("dateOfBirth", binding.dateOfBirthValue.text.toString())
+            intent.putExtra("email", binding.emailValue.text.toString())
+            intent.putExtra("phoneNumber", binding.phoneNumberValue.text.toString())
+            intent.putExtra("location", binding.locationValue.text.toString())
+            intent.putExtra("numberOfValves", binding.numberOfValvesValue.text.toString().toIntOrNull() ?: 8)
 
-    private fun setupPhotoChangeButton() {
-        binding.changePhotoButton.setOnClickListener {
-            showPhotoOptionsDialog()
-        }
-    }
-
-    private fun setupTabs() {
-        binding.personalInfoTab.setOnClickListener {
-            showPersonalInfo()
-        }
-
-        binding.teamsTab.setOnClickListener {
-            showSystemInfo()
+            editProfileLauncher.launch(intent)
         }
     }
 
-    private fun setupLogoutButton() {
-        binding.logoutButton.setOnClickListener {
-            showLogoutConfirmationDialog()
-        }
+
+    private fun setupBackButton() {
+        binding.backButton.setOnClickListener { finish() }
     }
 
-    // -----------------------------------------------------
-    //        CHARGEMENT DES DONNÉES
-    // -----------------------------------------------------
+    private fun setupTabNavigation() {
+        binding.personalInfoTab.setOnClickListener { showPersonalInfo() }
+        binding.teamsTab.setOnClickListener { showSystemSettings() }
 
-    private fun loadProfileData() {
-        val user = currentUser ?: return
-
-        // Mettre à jour l'en-tête
-        val fullName = listOfNotNull(user.firstName, user.lastName)
-            .joinToString(" ")
-            .ifEmpty { "User" }
-        binding.userFullName.text = fullName
-        binding.userEmailHeader.text = user.email
-
-        // Mettre à jour Personal Info avec "Not set" par défaut
-        binding.firstNameValue.text = user.firstName ?: "Not set"
-        binding.lastNameValue.text = user.lastName ?: "Not set"
-        binding.dateOfBirthValue.text = user.dateOfBirth ?: "Not set"
-        binding.emailValue.text = user.email
-        binding.phoneNumberValue.text = user.phoneNumber ?: "Not set"
-        binding.locationValue.text = user.location ?: "Not set"
-
-        // Mettre à jour System Info
-        // Note: numberOfValves is not in the User model - this should come from device count
-        binding.numberOfValvesValue.text = "Managed through devices"
+        // Afficher les informations personnelles par défaut
+        showPersonalInfo()
     }
 
-    // -----------------------------------------------------
-    //        NAVIGATION VERS EDIT PROFILE
-    // -----------------------------------------------------
+    private fun showPersonalInfo() {
+        binding.personalInfoSection.visibility = View.VISIBLE
+        binding.systemSection.visibility = View.GONE
 
-    private fun openEditProfile() {
-        val user = currentUser ?: return
+        binding.personalInfoTab.setTextColor(resources.getColor(R.color.black, null))
+        binding.personalInfoTab.setBackgroundColor(resources.getColor(R.color.white, null))
+        binding.personalInfoTab.setTypeface(null, android.graphics.Typeface.BOLD)
 
-        val intent = Intent(this, EditProfileActivity::class.java)
-
-        // Passer les données actuelles de l'utilisateur
-        intent.putExtra("firstName", user.firstName)
-        intent.putExtra("lastName", user.lastName)
-        intent.putExtra("dateOfBirth", user.dateOfBirth)
-        intent.putExtra("email", user.email)
-        intent.putExtra("phoneNumber", user.phoneNumber)
-        intent.putExtra("location", user.location)
-
-        editProfileLauncher.launch(intent)
+        binding.teamsTab.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+        binding.teamsTab.setBackgroundColor(resources.getColor(android.R.color.background_light, null))
+        binding.teamsTab.setTypeface(null, android.graphics.Typeface.NORMAL)
     }
 
-    // -----------------------------------------------------
-    //        DIALOG POUR CHANGER LA PHOTO
-    // -----------------------------------------------------
+    private fun showSystemSettings() {
+        binding.personalInfoSection.visibility = View.GONE
+        binding.systemSection.visibility = View.VISIBLE
 
-    private fun showPhotoOptionsDialog() {
-        val options = arrayOf(
-            "Take Photo",
-            "Choose from Gallery",
-            "Remove Photo",
-            "Cancel"
-        )
+        binding.teamsTab.setTextColor(resources.getColor(R.color.black, null))
+        binding.teamsTab.setBackgroundColor(resources.getColor(R.color.white, null))
+        binding.teamsTab.setTypeface(null, android.graphics.Typeface.BOLD)
 
+        binding.personalInfoTab.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+        binding.personalInfoTab.setBackgroundColor(resources.getColor(android.R.color.background_light, null))
+        binding.personalInfoTab.setTypeface(null, android.graphics.Typeface.NORMAL)
+    }
+
+    private fun setupLogout() {
+        binding.logoutButton.setOnClickListener { showLogoutConfirmation() }
+    }
+
+    private fun showLogoutConfirmation() {
         AlertDialog.Builder(this)
-            .setTitle("Change Profile Photo")
-            .setItems(options) { dialog, which ->
-                when (which) {
-                    0 -> takePhoto()
-                    1 -> chooseFromGallery()
-                    2 -> removePhoto()
-                    3 -> dialog.dismiss()
-                }
-            }
+            .setTitle(getString(R.string.logout))
+            .setMessage(getString(R.string.logout_confirm))
+            .setPositiveButton(getString(R.string.yes)) { _, _ -> logout() }
+            .setNegativeButton(getString(R.string.no), null)
             .show()
     }
 
-    private fun takePhoto() {
-        // TODO: Implémenter la prise de photo avec la caméra
-        Toast.makeText(this, "Camera feature - Coming soon", Toast.LENGTH_SHORT).show()
-    }
+    private fun logout() {
+        val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
+        prefs.edit().clear().apply()
 
-    private fun chooseFromGallery() {
-        // TODO: Implémenter la sélection depuis la galerie
-        Toast.makeText(this, "Gallery feature - Coming soon", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun removePhoto() {
-        AlertDialog.Builder(this)
-            .setTitle("Remove Photo")
-            .setMessage("Are you sure you want to remove your profile photo?")
-            .setPositiveButton("Remove") { _, _ ->
-                // TODO: Supprimer la photo de profil
-                binding.profilePicture.setImageResource(R.drawable.ic_launcher_foreground)
-                Toast.makeText(this, "Profile photo removed", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    // -----------------------------------------------------
-    //        LOGOUT CONFIRMATION DIALOG
-    // -----------------------------------------------------
-
-    private fun showLogoutConfirmationDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Logout")
-            .setMessage("Are you sure you want to logout?")
-            .setPositiveButton("Logout") { _, _ ->
-                performLogout()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun performLogout() {
-        // Clear authentication data
-        val tokenManager = TokenManager.getInstance(this)
-        tokenManager.logout()
-
-        // Reset API client
-        ApiClient.reset()
-
-        // Navigate to login screen and clear back stack
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
 
-    // -----------------------------------------------------
-    //        AFFICHAGE DES SECTIONS (TABS)
-    // -----------------------------------------------------
+    private fun loadUserData() {
+        val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
 
-    private fun showPersonalInfo() {
-        // Afficher/masquer les sections
-        binding.personalInfoSection.visibility = android.view.View.VISIBLE
-        binding.systemSection.visibility = android.view.View.GONE
-
-        // Style de l'onglet actif (Personal Info)
-        binding.personalInfoTab.apply {
-            setTextColor(getColor(R.color.black))
-            setBackgroundColor(getColor(R.color.white))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-
-        // Style de l'onglet inactif (System)
-        binding.teamsTab.apply {
-            setTextColor(getColor(android.R.color.darker_gray))
-            setBackgroundColor(getColor(android.R.color.transparent))
-            setTypeface(null, android.graphics.Typeface.NORMAL)
-        }
+        binding.firstNameValue.text = prefs.getString("user_first_name", "Yassine") ?: "Yassine"
+        binding.lastNameValue.text = prefs.getString("user_last_name", "Kaibi") ?: "Kaibi"
+        binding.emailValue.text = prefs.getString("user_email", "yassine@example.com") ?: "yassine@example.com"
+        binding.phoneNumberValue.text = prefs.getString("user_phone", "+216 12 345 678") ?: "+216 12 345 678"
+        binding.locationValue.text = prefs.getString("user_location", "Sfax, Tunisia") ?: "Sfax, Tunisia"
     }
 
-    private fun showSystemInfo() {
-        // Afficher/masquer les sections
-        binding.personalInfoSection.visibility = android.view.View.GONE
-        binding.systemSection.visibility = android.view.View.VISIBLE
-
-        // Style de l'onglet actif (System)
-        binding.teamsTab.apply {
-            setTextColor(getColor(R.color.black))
-            setBackgroundColor(getColor(R.color.white))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-
-        // Style de l'onglet inactif (Personal Info)
-        binding.personalInfoTab.apply {
-            setTextColor(getColor(android.R.color.darker_gray))
-            setBackgroundColor(getColor(android.R.color.transparent))
-            setTypeface(null, android.graphics.Typeface.NORMAL)
-        }
-    }
 }

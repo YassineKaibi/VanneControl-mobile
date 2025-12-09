@@ -1,6 +1,7 @@
 package com.example.myapplicationv10
 
 import android.app.Application
+import androidx.lifecycle.LifecycleObserver
 import com.example.myapplicationv10.network.ApiClient
 
 /**
@@ -8,7 +9,7 @@ import com.example.myapplicationv10.network.ApiClient
  *
  * Initialise les composants globaux de l'application au démarrage
  */
-class PistonControlApplication : Application() {
+class PistonControlApplication : Application() , LifecycleObserver{
 
     override fun onCreate() {
         super.onCreate()

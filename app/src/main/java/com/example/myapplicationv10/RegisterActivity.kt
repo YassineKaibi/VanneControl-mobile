@@ -20,11 +20,12 @@ import kotlinx.coroutines.launch
  * Utilise RegisterViewModel pour gérer l'inscription
  * Observe les StateFlow pour mettre à jour l'UI de manière réactive
  */
-class RegisterActivity : AppCompatActivity() {
+class RegisterActivity : BaseActivity() {
 
     private lateinit var firstNameField: EditText
     private lateinit var lastNameField: EditText
     private lateinit var emailField: EditText
+    private lateinit var phoneField: EditText
     private lateinit var passwordField: EditText
     private lateinit var confirmPasswordField: EditText
     private lateinit var registerButton: Button
@@ -43,11 +44,10 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
-        // Note: Ces IDs doivent correspondre à votre layout XML
-        // Si les IDs sont différents, ajustez-les
         firstNameField = findViewById(R.id.firstNameField)
         lastNameField = findViewById(R.id.lastNameField)
         emailField = findViewById(R.id.emailField)
+        phoneField = findViewById(R.id.phoneField)
         passwordField = findViewById(R.id.passwordField)
         confirmPasswordField = findViewById(R.id.confirmPasswordField)
         registerButton = findViewById(R.id.registerButton)
@@ -60,10 +60,11 @@ class RegisterActivity : AppCompatActivity() {
             val firstName = firstNameField.text.toString().trim()
             val lastName = lastNameField.text.toString().trim()
             val email = emailField.text.toString().trim()
+            val phone = phoneField.text.toString().trim()
             val password = passwordField.text.toString().trim()
             val confirmPassword = confirmPasswordField.text.toString().trim()
 
-            viewModel.register(firstName, lastName, email, password, confirmPassword)
+            viewModel.register(firstName, lastName, email, phone, password, confirmPassword)
         }
 
         // Clic sur "Already have an account? Sign in"
@@ -134,6 +135,12 @@ class RegisterActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.emailError.collect { error ->
                 emailField.error = error
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.phoneError.collect { error ->
+                phoneField.error = error
             }
         }
 

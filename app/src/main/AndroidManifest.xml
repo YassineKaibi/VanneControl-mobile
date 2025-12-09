@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.myapplicationv10">
-
     <!-- Permissions pour MQTT et réseau -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -17,46 +16,41 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplicationV10">
-
+        <activity
+            android:name=".TimingPlanActivity"
+            android:exported="false" />
         <!-- Edit Profile Activity -->
         <activity
             android:name=".EditProfileActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <!-- Profile Activity -->
+            android:windowSoftInputMode="adjustResize" /> <!-- Profile Activity -->
         <activity
             android:name=".ProfileActivity"
-            android:exported="false" />
-        <!-- History Activity -->
+            android:exported="false" /> <!-- History Activity -->
         <activity
             android:name=".HistoryActivity"
-            android:exported="false" />
-        <!-- Statistics Activity -->
+            android:exported="false" /> <!-- Statistics Activity -->
         <activity
             android:name=".StatisticsActivity"
-            android:exported="false" />
-        <!-- Valve Management Activity -->
+            android:exported="false" /> <!-- Valve Management Activity -->
         <activity
             android:name=".ValveManagementActivity"
-            android:exported="false" />
-        <!-- Dashboard Activity -->
+            android:exported="false" /> <!-- Dashboard Activity -->
         <activity
             android:name=".DashboardActivity"
-            android:exported="false" />
-        <!-- Register Activity -->
+            android:exported="false" /> <!-- Register Activity -->
         <activity
             android:name=".RegisterActivity"
-            android:exported="false" />
-        <!-- Login Activity -->
+            android:exported="false" /> <!-- Login Activity -->
         <activity
             android:name=".LoginActivity"
-            android:exported="false" />
-        <!-- Main Activity -->
+            android:exported="false" /> <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

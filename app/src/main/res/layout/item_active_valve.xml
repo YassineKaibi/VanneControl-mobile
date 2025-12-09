@@ -55,7 +55,7 @@
         android:id="@+id/valveStatusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Active"
+        android:text="@string/active"
         android:textColor="@color/green"
         android:textSize="12sp"
         android:layout_marginTop="8dp"

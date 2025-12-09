@@ -3,19 +3,15 @@ package com.example.myapplicationv10
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
+import com.example.myapplicationv10.databinding.ActivityEditProfileBinding
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,28 +21,14 @@ class EditProfileActivity : AppCompatActivity() {
     // ViewModel
     private val viewModel: ProfileViewModel by viewModels()
 
-    // Views
-    private lateinit var profilePicture: ImageView
-    private lateinit var changePhotoButton: CardView
-    private lateinit var firstNameEdit: TextInputEditText
-    private lateinit var lastNameEdit: TextInputEditText
-    private lateinit var dateOfBirthEdit: TextInputEditText
-    private lateinit var emailEdit: TextInputEditText
-    private lateinit var phoneEdit: TextInputEditText
-    private lateinit var locationEdit: TextInputEditText
-    private lateinit var numberOfValvesEdit: TextInputEditText
-    private lateinit var saveButton: TextView
-    private lateinit var saveChangesButton: androidx.appcompat.widget.AppCompatButton
-    private lateinit var backButton: ImageView
-
-    // Date picker calendar
+    private lateinit var binding: ActivityEditProfileBinding
     private var selectedDate: Calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_edit_profile)
+        binding = ActivityEditProfileBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        initializeViews()
         setupBackButton()
         setupBackPressedHandler()
         setupSaveButtons()
@@ -56,24 +38,8 @@ class EditProfileActivity : AppCompatActivity() {
         loadCurrentData()
     }
 
-    private fun initializeViews() {
-        profilePicture = findViewById(R.id.profilePicture)
-        changePhotoButton = findViewById(R.id.changePhotoButton)
-        firstNameEdit = findViewById(R.id.firstNameEdit)
-        lastNameEdit = findViewById(R.id.lastNameEdit)
-        dateOfBirthEdit = findViewById(R.id.dateOfBirthEdit)
-        emailEdit = findViewById(R.id.emailEdit)
-        phoneEdit = findViewById(R.id.phoneEdit)
-        locationEdit = findViewById(R.id.locationEdit)
-        numberOfValvesEdit = findViewById(R.id.numberOfValvesEdit)
-        saveButton = findViewById(R.id.saveButton)
-        saveChangesButton = findViewById(R.id.saveChangesButton)
-        backButton = findViewById(R.id.backButton)
-    }
-
     private fun setupBackButton() {
-        backButton.setOnClickListener {
-            // Vérifier si des modifications ont été faites
+        binding.backButton.setOnClickListener {
             showDiscardChangesDialog()
         }
     }
@@ -87,38 +53,26 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun setupSaveButtons() {
-        // Bouton Save en haut à droite
-        saveButton.setOnClickListener {
-            saveProfile()
-        }
-
-        // Bouton Save Changes en bas
-        saveChangesButton.setOnClickListener {
-            saveProfile()
-        }
+        binding.saveButton.setOnClickListener { saveProfile() }
+        binding.saveChangesButton.setOnClickListener { saveProfile() }
     }
 
     private fun setupDatePicker() {
-        dateOfBirthEdit.setOnClickListener {
-            showDatePickerDialog()
-        }
+        binding.dateOfBirthEdit.setOnClickListener { showDatePickerDialog() }
     }
 
     private fun setupChangePhotoButton() {
-        changePhotoButton.setOnClickListener {
-            showPhotoOptionsDialog()
-        }
+        binding.changePhotoButton.setOnClickListener { showPhotoOptionsDialog() }
     }
 
     private fun loadCurrentData() {
-        // Récupérer les données depuis l'Intent
-        firstNameEdit.setText(intent.getStringExtra("firstName") ?: "Yassine")
-        lastNameEdit.setText(intent.getStringExtra("lastName") ?: "Channa")
-        dateOfBirthEdit.setText(intent.getStringExtra("dateOfBirth") ?: "15/03/1995")
-        emailEdit.setText(intent.getStringExtra("email") ?: "admin@vannecontrol.com")
-        phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "+216 XX XXX XXX")
-        locationEdit.setText(intent.getStringExtra("location") ?: "Houmt Souk, Medenine, Tunisia")
-        numberOfValvesEdit.setText(intent.getIntExtra("numberOfValves", 8).toString())
+        binding.firstNameEdit.setText(intent.getStringExtra("firstName") ?: "Yassine")
+        binding.lastNameEdit.setText(intent.getStringExtra("lastName") ?: "Channa")
+        binding.dateOfBirthEdit.setText(intent.getStringExtra("dateOfBirth") ?: "15/03/1995")
+        binding.emailEdit.setText(intent.getStringExtra("email") ?: "admin@vannecontrol.com")
+        binding.phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "+216 XX XXX XXX")
+        binding.locationEdit.setText(intent.getStringExtra("location") ?: "Houmt Souk, Medenine, Tunisia")
+        binding.numberOfValvesEdit.setText(intent.getIntExtra("numberOfValves", 8).toString())
     }
 
     private fun showDatePickerDialog() {
@@ -137,25 +91,17 @@ class EditProfileActivity : AppCompatActivity() {
             day
         )
 
-        // Limiter la date à aujourd'hui (pas de dates futures)
         datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
-
         datePickerDialog.show()
     }
 
     private fun updateDateField() {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        dateOfBirthEdit.setText(sdf.format(selectedDate.time))
+        binding.dateOfBirthEdit.setText(sdf.format(selectedDate.time))
     }
 
     private fun showPhotoOptionsDialog() {
-        val options = arrayOf(
-            "Take Photo",
-            "Choose from Gallery",
-            "Remove Photo",
-            "Cancel"
-        )
-
+        val options = arrayOf("Take Photo", "Choose from Gallery", "Remove Photo", "Cancel")
         AlertDialog.Builder(this)
             .setTitle("Change Profile Photo")
             .setItems(options) { dialog, which ->
@@ -165,26 +111,15 @@ class EditProfileActivity : AppCompatActivity() {
                     2 -> removePhoto()
                     3 -> dialog.dismiss()
                 }
-            }
-            .show()
+            }.show()
     }
 
     private fun takePhoto() {
-        // TODO: Implémenter la prise de photo avec la caméra
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            "Camera feature - Coming soon",
-            Snackbar.LENGTH_SHORT
-        ).show()
+        Snackbar.make(binding.root, "Camera feature - Coming soon", Snackbar.LENGTH_SHORT).show()
     }
 
     private fun chooseFromGallery() {
-        // TODO: Implémenter la sélection depuis la galerie
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            "Gallery feature - Coming soon",
-            Snackbar.LENGTH_SHORT
-        ).show()
+        Snackbar.make(binding.root, "Gallery feature - Coming soon", Snackbar.LENGTH_SHORT).show()
     }
 
     private fun removePhoto() {
@@ -192,13 +127,8 @@ class EditProfileActivity : AppCompatActivity() {
             .setTitle("Remove Photo")
             .setMessage("Are you sure you want to remove your profile photo?")
             .setPositiveButton("Remove") { _, _ ->
-                // TODO: Supprimer la photo de profil
-                profilePicture.setImageResource(R.drawable.ic_launcher_foreground)
-                Snackbar.make(
-                    findViewById(android.R.id.content),
-                    "Profile photo removed",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+                binding.profilePicture.setImageResource(R.drawable.ic_launcher_foreground)
+                Snackbar.make(binding.root, "Profile photo removed", Snackbar.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -220,13 +150,13 @@ class EditProfileActivity : AppCompatActivity() {
                     is NetworkResult.Success -> {
                         hideLoading()
                         Snackbar.make(
-                            findViewById(android.R.id.content),
+                            binding.root,
                             "Profile updated successfully!",
                             Snackbar.LENGTH_LONG
                         ).show()
 
                         // Attendre un peu avant de fermer pour montrer le message
-                        findViewById<android.view.View>(android.R.id.content).postDelayed({
+                        binding.root.postDelayed({
                             setResult(RESULT_OK)
                             finish()
                         }, 1500)
@@ -235,7 +165,7 @@ class EditProfileActivity : AppCompatActivity() {
                     is NetworkResult.Error -> {
                         hideLoading()
                         Snackbar.make(
-                            findViewById(android.R.id.content),
+                            binding.root,
                             "Failed to update profile: ${result.message}",
                             Snackbar.LENGTH_LONG
                         ).show()
@@ -246,25 +176,25 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun showLoading() {
-        saveButton.isEnabled = false
-        saveChangesButton.isEnabled = false
-        saveChangesButton.text = "Saving..."
+        binding.saveButton.isEnabled = false
+        binding.saveChangesButton.isEnabled = false
+        binding.saveChangesButton.text = "Saving..."
     }
 
     private fun hideLoading() {
-        saveButton.isEnabled = true
-        saveChangesButton.isEnabled = true
-        saveChangesButton.text = "Save Changes"
+        binding.saveButton.isEnabled = true
+        binding.saveChangesButton.isEnabled = true
+        binding.saveChangesButton.text = "Save Changes"
     }
 
     private fun saveProfile() {
         if (validateInputs()) {
             // Récupérer les valeurs
-            val firstName = firstNameEdit.text.toString().trim()
-            val lastName = lastNameEdit.text.toString().trim()
-            val dateOfBirth = dateOfBirthEdit.text.toString().trim()
-            val phone = phoneEdit.text.toString().trim()
-            val location = locationEdit.text.toString().trim()
+            val firstName = binding.firstNameEdit.text.toString().trim()
+            val lastName = binding.lastNameEdit.text.toString().trim()
+            val dateOfBirth = binding.dateOfBirthEdit.text.toString().trim()
+            val phone = binding.phoneEdit.text.toString().trim()
+            val location = binding.locationEdit.text.toString().trim()
 
             // Convertir la date du format dd/MM/yyyy au format yyyy-MM-dd pour l'API
             val dateForApi = convertDateToApiFormat(dateOfBirth)
@@ -298,73 +228,54 @@ class EditProfileActivity : AppCompatActivity() {
     private fun validateInputs(): Boolean {
         var isValid = true
 
-        // Validation First Name
-        if (firstNameEdit.text.toString().trim().isEmpty()) {
-            firstNameEdit.error = "First name is required"
+        if (binding.firstNameEdit.text.toString().trim().isEmpty()) {
+            binding.firstNameEdit.error = "First name is required"
             isValid = false
         }
-
-        // Validation Last Name
-        if (lastNameEdit.text.toString().trim().isEmpty()) {
-            lastNameEdit.error = "Last name is required"
+        if (binding.lastNameEdit.text.toString().trim().isEmpty()) {
+            binding.lastNameEdit.error = "Last name is required"
             isValid = false
         }
-
-        // Validation Date of Birth
-        if (dateOfBirthEdit.text.toString().trim().isEmpty()) {
-            dateOfBirthEdit.error = "Date of birth is required"
+        if (binding.dateOfBirthEdit.text.toString().trim().isEmpty()) {
+            binding.dateOfBirthEdit.error = "Date of birth is required"
             isValid = false
         }
-
-        // Validation Email
-        val email = emailEdit.text.toString().trim()
+        val email = binding.emailEdit.text.toString().trim()
         if (email.isEmpty()) {
-            emailEdit.error = "Email is required"
+            binding.emailEdit.error = "Email is required"
             isValid = false
         } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailEdit.error = "Invalid email format"
+            binding.emailEdit.error = "Invalid email format"
             isValid = false
         }
-
-        // Validation Phone
-        val phone = phoneEdit.text.toString().trim()
+        val phone = binding.phoneEdit.text.toString().trim()
         if (phone.isEmpty()) {
-            phoneEdit.error = "Phone number is required"
+            binding.phoneEdit.error = "Phone number is required"
             isValid = false
         } else if (phone.length < 8) {
-            phoneEdit.error = "Phone number is too short"
+            binding.phoneEdit.error = "Phone number is too short"
             isValid = false
         }
-
-        // Validation Location
-        if (locationEdit.text.toString().trim().isEmpty()) {
-            locationEdit.error = "Location is required"
+        if (binding.locationEdit.text.toString().trim().isEmpty()) {
+            binding.locationEdit.error = "Location is required"
             isValid = false
         }
-
-        // Validation Number of Valves
-        val valvesText = numberOfValvesEdit.text.toString().trim()
+        val valvesText = binding.numberOfValvesEdit.text.toString().trim()
         if (valvesText.isEmpty()) {
-            numberOfValvesEdit.error = "Number of valves is required"
+            binding.numberOfValvesEdit.error = "Number of valves is required"
             isValid = false
         } else {
             val valves = valvesText.toIntOrNull()
             if (valves == null || valves < 1) {
-                numberOfValvesEdit.error = "Must be at least 1"
+                binding.numberOfValvesEdit.error = "Must be at least 1"
                 isValid = false
             } else if (valves > 50) {
-                numberOfValvesEdit.error = "Maximum 50 valves"
+                binding.numberOfValvesEdit.error = "Maximum 50 valves"
                 isValid = false
             }
         }
 
-        if (!isValid) {
-            Snackbar.make(
-                findViewById(android.R.id.content),
-                "Please fix the errors before saving",
-                Snackbar.LENGTH_LONG
-            ).show()
-        }
+        if (!isValid) Snackbar.make(binding.root, "Please fix the errors before saving", Snackbar.LENGTH_LONG).show()
 
         return isValid
     }
@@ -373,10 +284,9 @@ class EditProfileActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Discard Changes?")
             .setMessage("You have unsaved changes. Are you sure you want to go back?")
-            .setPositiveButton("Discard") { _, _ ->
-                finish()
-            }
+            .setPositiveButton("Discard") { _, _ -> finish() }
             .setNegativeButton("Keep Editing", null)
             .show()
     }
+
 }
