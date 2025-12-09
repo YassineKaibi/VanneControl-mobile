@@ -4,12 +4,11 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplicationv10.databinding.ActivityTimingPlanBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TimingPlanActivity : AppCompatActivity() {
+class TimingPlanActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTimingPlanBinding
     private val calendarStart = Calendar.getInstance()
@@ -70,33 +69,14 @@ class TimingPlanActivity : AppCompatActivity() {
     }
 
     private fun pickDateTime(calendar: Calendar, callback: (String) -> Unit) {
-        val dateListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-            calendar.set(Calendar.YEAR, year)
-            calendar.set(Calendar.MONTH, month)
-            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-
-            val timeListener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
+        DatePickerDialog(this, { _, year, month, day ->
+            calendar.set(year, month, day)
+            TimePickerDialog(this, { _, hour, minute ->
                 calendar.set(Calendar.HOUR_OF_DAY, hour)
                 calendar.set(Calendar.MINUTE, minute)
-                val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                callback(format.format(calendar.time))
-            }
-
-            TimePickerDialog(
-                this,
-                timeListener,
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                true
-            ).show()
-        }
-
-        DatePickerDialog(
-            this,
-            dateListener,
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                callback(sdf.format(calendar.time))
+            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
     }
 }
