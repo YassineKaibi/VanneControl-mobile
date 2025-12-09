@@ -5,78 +5,151 @@ import android.app.TimePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import com.example.myapplicationv10.databinding.ActivityTimingPlanBinding
+import com.google.android.material.button.MaterialButton
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TimingPlanActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTimingPlanBinding
-    private val calendarStart = Calendar.getInstance()
-    private val calendarEnd = Calendar.getInstance()
+
+    private var selectedValveNumber: Int? = null
+    private var selectedAction: String? = null
+    private var selectedDateTime: Calendar? = null
+
+    private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTimingPlanBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Segmented Button
-        binding.segmentTop.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                when (checkedId) {
-                    binding.segVanne.id -> {
-                        binding.sectionVannes.visibility = android.view.View.VISIBLE
-                        binding.sectionStart.visibility = android.view.View.GONE
-                        binding.sectionEnd.visibility = android.view.View.GONE
-                    }
-                    binding.segStart.id -> {
-                        binding.sectionVannes.visibility = android.view.View.GONE
-                        binding.sectionStart.visibility = android.view.View.VISIBLE
-                        binding.sectionEnd.visibility = android.view.View.GONE
-                    }
-                    binding.segEnd.id -> {
-                        binding.sectionVannes.visibility = android.view.View.GONE
-                        binding.sectionStart.visibility = android.view.View.GONE
-                        binding.sectionEnd.visibility = android.view.View.VISIBLE
-                    }
-                }
-            }
-        }
+        setupVanneButtons()
+        setupActionButtons()
+        setupDateTimePicker()
+        setupSaveButton()
+    }
 
-        // Boutons vannes
+    private fun setupVanneButtons() {
         val vanneButtons = listOf(
-            binding.v1, binding.v2, binding.v3, binding.v4,
-            binding.v5, binding.v6, binding.v7, binding.v8
+            binding.btnVanne1, binding.btnVanne2, binding.btnVanne3, binding.btnVanne4,
+            binding.btnVanne5, binding.btnVanne6, binding.btnVanne7, binding.btnVanne8
         )
-        vanneButtons.forEach { button ->
+
+        vanneButtons.forEachIndexed { index, button ->
             button.setOnClickListener {
-                Toast.makeText(this, "Vanne ${button.text} sélectionnée", Toast.LENGTH_SHORT).show()
-            }
-        }
+                // Désélectionner tous les boutons
+                vanneButtons.forEach { it.isChecked = false }
 
-        // Date + heure début
-        binding.pickStart.setOnClickListener {
-            pickDateTime(calendarStart) { formatted ->
-                binding.startSelected.text = formatted
-            }
-        }
-
-        // Date + heure fin
-        binding.pickEnd.setOnClickListener {
-            pickDateTime(calendarEnd) { formatted ->
-                binding.endSelected.text = formatted
+                // Sélectionner le bouton cliqué
+                button.isChecked = true
+                selectedValveNumber = index + 1
             }
         }
     }
 
-    private fun pickDateTime(calendar: Calendar, callback: (String) -> Unit) {
-        DatePickerDialog(this, { _, year, month, day ->
-            calendar.set(year, month, day)
-            TimePickerDialog(this, { _, hour, minute ->
-                calendar.set(Calendar.HOUR_OF_DAY, hour)
+    private fun setupActionButtons() {
+        binding.btnActionOpen.setOnClickListener {
+            binding.btnActionOpen.isChecked = true
+            binding.btnActionClose.isChecked = false
+            selectedAction = "OPEN"
+        }
+
+        binding.btnActionClose.setOnClickListener {
+            binding.btnActionClose.isChecked = true
+            binding.btnActionOpen.isChecked = false
+            selectedAction = "CLOSE"
+        }
+    }
+
+    private fun setupDateTimePicker() {
+        binding.etDateTime.setOnClickListener {
+            showDatePicker()
+        }
+    }
+
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+                // Afficher le TimePickerDialog après la sélection de la date
+                showTimePicker(calendar)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        // Ne pas permettre de sélectionner une date passée
+        datePickerDialog.datePicker.minDate = System.currentTimeMillis()
+        datePickerDialog.show()
+    }
+
+    private fun showTimePicker(calendar: Calendar) {
+        val timePickerDialog = TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                 calendar.set(Calendar.MINUTE, minute)
-                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                callback(sdf.format(calendar.time))
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+                calendar.set(Calendar.SECOND, 0)
+
+                selectedDateTime = calendar
+                binding.etDateTime.setText(dateTimeFormat.format(calendar.time))
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true // Format 24h
+        )
+
+        timePickerDialog.show()
+    }
+
+    private fun setupSaveButton() {
+        binding.btnSave.setOnClickListener {
+            if (validateInputs()) {
+                saveTiming()
+            }
+        }
+    }
+
+    private fun validateInputs(): Boolean {
+        if (selectedValveNumber == null) {
+            Toast.makeText(this, "Veuillez sélectionner une vanne", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (selectedAction == null) {
+            Toast.makeText(this, "Veuillez sélectionner une action", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (selectedDateTime == null) {
+            Toast.makeText(this, "Veuillez sélectionner la date et l'heure", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true
+    }
+
+    private fun saveTiming() {
+        // TODO: Implémenter la sauvegarde dans la base de données ou l'envoi au serveur
+
+        val message = """
+            Plan enregistré:
+            Vanne: $selectedValveNumber
+            Action: $selectedAction
+            Date/Heure: ${dateTimeFormat.format(selectedDateTime!!.time)}
+        """.trimIndent()
+
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+
+        // Retour à l'activité précédente
+        finish()
     }
 }
