@@ -30,13 +30,19 @@
     <string name="register_button">Sign Up</string>
     <string name="have_account">Already have an account? Log in</string>
 
-    /*
-    <string name="registration_success">Registration successful!</string>
-    <string name="registration_error">Registration failed. Please try again.</string>
-    <string name="passwords_not_match">Passwords do not match</string>
-    <string name="first_name_required">First name is required</string>
-    <string name="last_name_required">Last name is required</string>
-    */
+    <!-- Validation errors -->
+    <string name="error_first_name_required">First name is required</string>
+    <string name="error_first_name_too_short">First name is too short (min. 2 characters)</string>
+    <string name="error_last_name_required">Last name is required</string>
+    <string name="error_last_name_too_short">Last name is too short (min. 2 characters)</string>
+    <string name="error_email_required">Email is required</string>
+    <string name="error_email_invalid">Invalid email format</string>
+    <string name="error_phone_required">Phone number is required</string>
+    <string name="error_phone_invalid">Invalid phone number (min. 8 digits)</string>
+    <string name="error_password_required">Password is required</string>
+    <string name="error_password_too_short">Password is too short (min. 6 characters)</string>
+    <string name="error_confirm_password_required">Confirmation required</string>
+    <string name="error_passwords_not_match">Passwords do not match</string>
 
     <!-- Dashboard Activity -->
     /*

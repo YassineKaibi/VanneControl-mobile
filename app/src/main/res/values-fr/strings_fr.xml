@@ -23,14 +23,26 @@
     <string name="register_title">Inscription</string>
     <string name="first_name_hint">Prénom</string>
     <string name="last_name_hint">Nom</string>
+    <string name="phone_hint">Téléphone</string>
     <string name="confirm_password_hint">Confirmer le mot de passe</string>
     <string name="register_button">S\'inscrire</string>
     <string name="have_account">Vous avez déjà un compte ? Connectez-vous</string>
     <string name="registration_success">Inscription réussie !</string>
     <string name="registration_error">Échec de l\'inscription. Réessayez.</string>
-    <string name="passwords_not_match">Les mots de passe ne correspondent pas</string>
-    <string name="first_name_required">Le prénom est requis</string>
-    <string name="last_name_required">Le nom est requis</string>
+
+    <!-- Validation errors -->
+    <string name="error_first_name_required">Le prénom est requis</string>
+    <string name="error_first_name_too_short">Prénom trop court (min. 2 caractères)</string>
+    <string name="error_last_name_required">Le nom est requis</string>
+    <string name="error_last_name_too_short">Nom trop court (min. 2 caractères)</string>
+    <string name="error_email_required">L\'email est requis</string>
+    <string name="error_email_invalid">Format d\'email invalide</string>
+    <string name="error_phone_required">Le numéro de téléphone est requis</string>
+    <string name="error_phone_invalid">Numéro de téléphone invalide (min. 8 chiffres)</string>
+    <string name="error_password_required">Le mot de passe est requis</string>
+    <string name="error_password_too_short">Mot de passe trop court (min. 6 caractères)</string>
+    <string name="error_confirm_password_required">Confirmation requise</string>
+    <string name="error_passwords_not_match">Les mots de passe ne correspondent pas</string>
 
     <!-- Dashboard Activity -->
     <string name="dashboard_title">Tableau de bord</string>

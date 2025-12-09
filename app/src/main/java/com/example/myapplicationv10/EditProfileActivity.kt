@@ -4,15 +4,22 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.myapplicationv10.databinding.ActivityEditProfileBinding
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 class EditProfileActivity : AppCompatActivity() {
 
+    // ViewModel
+    private val viewModel: ProfileViewModel by viewModels()
 
     private lateinit var binding: ActivityEditProfileBinding
     private var selectedDate: Calendar = Calendar.getInstance()
@@ -27,6 +34,7 @@ class EditProfileActivity : AppCompatActivity() {
         setupSaveButtons()
         setupDatePicker()
         setupChangePhotoButton()
+        observeViewModel()
         loadCurrentData()
     }
 
@@ -126,29 +134,94 @@ class EditProfileActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun observeViewModel() {
+        // Observer l'état de mise à jour du profil
+        lifecycleScope.launch {
+            viewModel.updateProfileState.collect { result ->
+                when (result) {
+                    is NetworkResult.Idle -> {
+                        // État initial - Ne rien faire
+                    }
+
+                    is NetworkResult.Loading -> {
+                        showLoading()
+                    }
+
+                    is NetworkResult.Success -> {
+                        hideLoading()
+                        Snackbar.make(
+                            binding.root,
+                            "Profile updated successfully!",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+
+                        // Attendre un peu avant de fermer pour montrer le message
+                        binding.root.postDelayed({
+                            setResult(RESULT_OK)
+                            finish()
+                        }, 1500)
+                    }
+
+                    is NetworkResult.Error -> {
+                        hideLoading()
+                        Snackbar.make(
+                            binding.root,
+                            "Failed to update profile: ${result.message}",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showLoading() {
+        binding.saveButton.isEnabled = false
+        binding.saveChangesButton.isEnabled = false
+        binding.saveChangesButton.text = "Saving..."
+    }
+
+    private fun hideLoading() {
+        binding.saveButton.isEnabled = true
+        binding.saveChangesButton.isEnabled = true
+        binding.saveChangesButton.text = "Save Changes"
+    }
+
     private fun saveProfile() {
         if (validateInputs()) {
+            // Récupérer les valeurs
             val firstName = binding.firstNameEdit.text.toString().trim()
             val lastName = binding.lastNameEdit.text.toString().trim()
             val dateOfBirth = binding.dateOfBirthEdit.text.toString().trim()
-            val email = binding.emailEdit.text.toString().trim()
             val phone = binding.phoneEdit.text.toString().trim()
             val location = binding.locationEdit.text.toString().trim()
-            val numberOfValves = binding.numberOfValvesEdit.text.toString().trim().toIntOrNull() ?: 8
 
-            Snackbar.make(binding.root, "Profile updated successfully!", Snackbar.LENGTH_LONG).show()
+            // Convertir la date du format dd/MM/yyyy au format yyyy-MM-dd pour l'API
+            val dateForApi = convertDateToApiFormat(dateOfBirth)
 
-            val resultIntent = Intent()
-            resultIntent.putExtra("firstName", firstName)
-            resultIntent.putExtra("lastName", lastName)
-            resultIntent.putExtra("dateOfBirth", dateOfBirth)
-            resultIntent.putExtra("email", email)
-            resultIntent.putExtra("phone", phone)
-            resultIntent.putExtra("location", location)
-            resultIntent.putExtra("numberOfValves", numberOfValves)
-            setResult(RESULT_OK, resultIntent)
+            // Appeler le ViewModel pour mettre à jour le profil
+            viewModel.updateUserProfile(
+                firstName = firstName,
+                lastName = lastName,
+                phoneNumber = phone,
+                dateOfBirth = dateForApi,
+                location = location,
+                avatarUrl = null  // TODO: Implement avatar upload
+            )
+        }
+    }
 
-            binding.root.postDelayed({ finish() }, 1500)
+    /**
+     * Convertir la date du format dd/MM/yyyy au format yyyy-MM-dd
+     */
+    private fun convertDateToApiFormat(date: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val parsedDate = inputFormat.parse(date)
+            outputFormat.format(parsedDate!!)
+        } catch (e: Exception) {
+            date  // Retourner la date originale en cas d'erreur
         }
     }
 

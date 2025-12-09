@@ -3,6 +3,7 @@ package com.example.myapplicationv10.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplicationv10.R
 import com.example.myapplicationv10.model.AuthResponse
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.repository.AuthRepository
@@ -92,13 +93,14 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         confirmPassword: String
     ): Boolean {
         var isValid = true
+        val context = getApplication<Application>()
 
         // Validation du prénom
         if (firstName.isEmpty()) {
-            _firstNameError.value = "Prénom requis"
+            _firstNameError.value = context.getString(R.string.error_first_name_required)
             isValid = false
         } else if (firstName.length < 2) {
-            _firstNameError.value = "Prénom trop court (min. 2 caractères)"
+            _firstNameError.value = context.getString(R.string.error_first_name_too_short)
             isValid = false
         } else {
             _firstNameError.value = null
@@ -106,10 +108,10 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Validation du nom de famille
         if (lastName.isEmpty()) {
-            _lastNameError.value = "Nom requis"
+            _lastNameError.value = context.getString(R.string.error_last_name_required)
             isValid = false
         } else if (lastName.length < 2) {
-            _lastNameError.value = "Nom trop court (min. 2 caractères)"
+            _lastNameError.value = context.getString(R.string.error_last_name_too_short)
             isValid = false
         } else {
             _lastNameError.value = null
@@ -117,10 +119,10 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Validation de l'email
         if (email.isEmpty()) {
-            _emailError.value = "Email requis"
+            _emailError.value = context.getString(R.string.error_email_required)
             isValid = false
         } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailError.value = "Email invalide"
+            _emailError.value = context.getString(R.string.error_email_invalid)
             isValid = false
         } else {
             _emailError.value = null
@@ -128,10 +130,10 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Validation du téléphone
         if (phone.isEmpty()) {
-            _phoneError.value = "Numéro de téléphone requis"
+            _phoneError.value = context.getString(R.string.error_phone_required)
             isValid = false
         } else if (phone.length < 8) {
-            _phoneError.value = "Numéro de téléphone invalide"
+            _phoneError.value = context.getString(R.string.error_phone_invalid)
             isValid = false
         } else {
             _phoneError.value = null
@@ -139,10 +141,10 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Validation du mot de passe
         if (password.isEmpty()) {
-            _passwordError.value = "Mot de passe requis"
+            _passwordError.value = context.getString(R.string.error_password_required)
             isValid = false
         } else if (password.length < 6) {
-            _passwordError.value = "Mot de passe trop court (min. 6 caractères)"
+            _passwordError.value = context.getString(R.string.error_password_too_short)
             isValid = false
         } else {
             _passwordError.value = null
@@ -150,10 +152,10 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Validation de la confirmation du mot de passe
         if (confirmPassword.isEmpty()) {
-            _confirmPasswordError.value = "Confirmation requise"
+            _confirmPasswordError.value = context.getString(R.string.error_confirm_password_required)
             isValid = false
         } else if (password != confirmPassword) {
-            _confirmPasswordError.value = "Les mots de passe ne correspondent pas"
+            _confirmPasswordError.value = context.getString(R.string.error_passwords_not_match)
             isValid = false
         } else {
             _confirmPasswordError.value = null
