@@ -143,11 +143,11 @@ interface ApiService {
     ): Response<ScheduleResponse>
 
     /**
-     * PUT /schedules/{id}
-     * Mettre à jour un planning existant
+     * PATCH /schedules/{id}
+     * Mettre à jour un planning existant (mise à jour partielle)
      * Requires: Authorization header avec JWT token
      */
-    @PUT("schedules/{id}")
+    @PATCH("schedules/{id}")
     suspend fun updateSchedule(
         @Path("id") scheduleId: String,
         @Body request: UpdateScheduleRequest
