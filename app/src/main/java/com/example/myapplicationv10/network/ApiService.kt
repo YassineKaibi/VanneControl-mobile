@@ -164,6 +164,48 @@ interface ApiService {
     ): Response<DeleteScheduleResponse>
 
     // =====================
+    // STATISTICS
+    // =====================
+
+    /**
+     * GET /devices/{deviceId}/stats
+     * Récupérer les statistiques d'un appareil
+     * Requires: Authorization header avec JWT token
+     *
+     * @param deviceId L'ID unique de l'appareil
+     */
+    @GET("devices/{deviceId}/stats")
+    suspend fun getDeviceStats(
+        @Path("deviceId") deviceId: String
+    ): Response<DeviceStatsResponse>
+
+    // =====================
+    // TELEMETRY / HISTORY
+    // =====================
+
+    /**
+     * GET /telemetry
+     * Récupérer l'historique des événements (télémétrie)
+     * Requires: Authorization header avec JWT token
+     *
+     * @param deviceId Filtrer par appareil (optionnel)
+     * @param pistonNumber Filtrer par numéro de piston (optionnel)
+     * @param action Filtrer par action: "activated" ou "deactivated" (optionnel)
+     * @param startDate Date de début au format ISO (optionnel)
+     * @param endDate Date de fin au format ISO (optionnel)
+     * @param limit Nombre maximum de résultats (défaut: 100)
+     */
+    @GET("telemetry")
+    suspend fun getTelemetry(
+        @Query("deviceId") deviceId: String? = null,
+        @Query("pistonNumber") pistonNumber: Int? = null,
+        @Query("action") action: String? = null,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null,
+        @Query("limit") limit: Int? = null
+    ): Response<TelemetryListResponse>
+
+    // =====================
     // HEALTH CHECK
     // =====================
 

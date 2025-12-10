@@ -7,6 +7,11 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplicationv10.model.Device
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.StatisticsViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -15,20 +20,23 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.snackbar.Snackbar
 import com.example.myapplicationv10.databinding.ActivityStatisticsBinding
+import kotlinx.coroutines.launch
 
 class StatisticsActivity : BaseActivity() {
 
 
     private lateinit var binding: ActivityStatisticsBinding
+    private lateinit var viewModel: StatisticsViewModel
 
     // Track which valves are selected for display (all selected by default)
     private val selectedValves = mutableSetOf(1, 2, 3, 4, 5, 6, 7, 8)
 
-    // Sample data
+    // Real data from backend
     private var totalValves = 8
-    private var activeValves = 4
-    private var inactiveValves = 3
-    private var maintenanceValves = 1
+    private var activeValves = 0
+    private var inactiveValves = 0
+    private var maintenanceValves = 0
+    private var currentDevice: Device? = null
 
     // Current period
     private var currentPeriod = "Last 24 hours"
@@ -66,17 +74,84 @@ class StatisticsActivity : BaseActivity() {
             insets
         }
 
+        // Initialize ViewModel
+        viewModel = ViewModelProvider(this)[StatisticsViewModel::class.java]
+
         setupBackButton()
         setupStatisticsCards()
         setupValveChips()
         setupPeriodSpinner()
         setupExportButton()
         setupLineChart()
-        loadChartData(currentPeriod)
+
+        // Observe data from backend
+        observeViewModel()
+
+        // Load devices and stats
+        viewModel.loadDevices()
     }
 
     private fun setupBackButton() {
         binding.backButton.setOnClickListener { finish() }
+    }
+
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            viewModel.devicesState.collect { result ->
+                when (result) {
+                    is NetworkResult.Success -> {
+                        if (result.data.isNotEmpty()) {
+                            // Use the first device for statistics
+                            currentDevice = result.data.first()
+                            currentDevice?.let { device ->
+                                // Calculate statistics from device pistons
+                                totalValves = device.pistons.size
+                                activeValves = device.pistons.count { it.state == "active" }
+                                inactiveValves = device.pistons.count { it.state == "inactive" }
+                                maintenanceValves = 0 // No maintenance state from backend
+
+                                // Update UI
+                                setupStatisticsCards()
+
+                                // Load detailed stats from backend
+                                viewModel.loadDeviceStats(device.id)
+
+                                // Load chart data (still uses sample data for now)
+                                loadChartData(currentPeriod)
+                            }
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                        Snackbar.make(binding.root, result.message, Snackbar.LENGTH_LONG).show()
+                    }
+                    is NetworkResult.Loading -> {
+                        // Show loading state if needed
+                    }
+                    is NetworkResult.Idle -> {
+                        // Initial state
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.statsState.collect { result ->
+                when (result) {
+                    is NetworkResult.Success -> {
+                        // Update with backend stats
+                        val stats = result.data
+                        totalValves = stats.totalPistons
+                        activeValves = stats.activePistons
+                        inactiveValves = stats.totalPistons - stats.activePistons
+                        setupStatisticsCards()
+                    }
+                    is NetworkResult.Error -> {
+                        // Stats failed to load, keep using device data
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun setupStatisticsCards() {
