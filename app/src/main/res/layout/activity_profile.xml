@@ -64,6 +64,17 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- LOADING INDICATOR -->
+    <ProgressBar
+        android:id="@+id/loadingIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/topBar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- SCROLL CONTENT -->
     <ScrollView
         android:layout_width="0dp"

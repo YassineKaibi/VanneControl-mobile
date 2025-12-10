@@ -7,14 +7,21 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.myapplicationv10.databinding.ActivityProfileBinding
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class ProfileActivity : BaseActivity() {
 
 
     private lateinit var binding: ActivityProfileBinding
     private lateinit var editProfileLauncher: ActivityResultLauncher<Intent>
+    private lateinit var viewModel: ProfileViewModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,26 +30,26 @@ class ProfileActivity : BaseActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Initialize ViewModel
+        viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+
         // 1️⃣ Initialiser le launcher pour EditProfileActivity
         val editProfileLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK && result.data != null) {
-                val data = result.data!!
-                binding.firstNameValue.text = data.getStringExtra("firstName") ?: binding.firstNameValue.text
-                binding.lastNameValue.text = data.getStringExtra("lastName") ?: binding.lastNameValue.text
-                binding.dateOfBirthValue.text = data.getStringExtra("dateOfBirth") ?: binding.dateOfBirthValue.text
-                binding.emailValue.text = data.getStringExtra("email") ?: binding.emailValue.text
-                binding.phoneNumberValue.text = data.getStringExtra("phone") ?: binding.phoneNumberValue.text
-                binding.locationValue.text = data.getStringExtra("location") ?: binding.locationValue.text
-                binding.numberOfValvesValue.text = (data.getIntExtra("numberOfValves", 8)).toString()
+                // Reload profile data from backend after edit
+                viewModel.loadUserProfile()
             }
         }
 
         setupBackButton()
         setupTabNavigation()
         setupLogout()
-        loadUserData()
+        observeProfileState()
+
+        // Load user profile from backend
+        viewModel.loadUserProfile()
 
         // 2️⃣ Lancer EditProfileActivity avec le launcher quand on clique sur editButton
         binding.editButton.setOnClickListener {
@@ -123,14 +130,83 @@ class ProfileActivity : BaseActivity() {
         finish()
     }
 
-    private fun loadUserData() {
+    private fun observeProfileState() {
+        lifecycleScope.launch {
+            viewModel.profileState.collect { result ->
+                when (result) {
+                    is NetworkResult.Idle -> {
+                        // Initial state
+                        binding.loadingIndicator.visibility = View.GONE
+                    }
+
+                    is NetworkResult.Loading -> {
+                        // Show loading indicator
+                        binding.loadingIndicator.visibility = View.VISIBLE
+                    }
+
+                    is NetworkResult.Success -> {
+                        // Hide loading indicator
+                        binding.loadingIndicator.visibility = View.GONE
+
+                        // Update UI with real backend data
+                        val user = result.data
+                        binding.firstNameValue.text = user.firstName ?: "N/A"
+                        binding.lastNameValue.text = user.lastName ?: "N/A"
+                        binding.emailValue.text = user.email
+                        binding.phoneNumberValue.text = user.phoneNumber ?: "N/A"
+                        binding.locationValue.text = user.location ?: "N/A"
+                        binding.dateOfBirthValue.text = user.dateOfBirth ?: "N/A"
+
+                        // Update header with full name
+                        val fullName = "${user.firstName ?: ""} ${user.lastName ?: ""}".trim()
+                        binding.userFullName.text = fullName.ifEmpty { "User" }
+                        binding.userEmailHeader.text = user.email
+
+                        // Save to SharedPreferences as cache
+                        val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
+                        prefs.edit().apply {
+                            putString("user_first_name", user.firstName)
+                            putString("user_last_name", user.lastName)
+                            putString("user_email", user.email)
+                            putString("user_phone", user.phoneNumber)
+                            putString("user_location", user.location)
+                            putString("user_date_of_birth", user.dateOfBirth)
+                            apply()
+                        }
+                    }
+
+                    is NetworkResult.Error -> {
+                        // Hide loading indicator
+                        binding.loadingIndicator.visibility = View.GONE
+
+                        // Show error message
+                        Snackbar.make(
+                            binding.root,
+                            "Failed to load profile: ${result.message}",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+
+                        // Load cached data from SharedPreferences as fallback
+                        loadCachedData()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadCachedData() {
         val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
 
-        binding.firstNameValue.text = prefs.getString("user_first_name", "Yassine") ?: "Yassine"
-        binding.lastNameValue.text = prefs.getString("user_last_name", "Kaibi") ?: "Kaibi"
-        binding.emailValue.text = prefs.getString("user_email", "yassine@example.com") ?: "yassine@example.com"
-        binding.phoneNumberValue.text = prefs.getString("user_phone", "+216 12 345 678") ?: "+216 12 345 678"
-        binding.locationValue.text = prefs.getString("user_location", "Sfax, Tunisia") ?: "Sfax, Tunisia"
+        binding.firstNameValue.text = prefs.getString("user_first_name", "N/A") ?: "N/A"
+        binding.lastNameValue.text = prefs.getString("user_last_name", "N/A") ?: "N/A"
+        binding.emailValue.text = prefs.getString("user_email", "N/A") ?: "N/A"
+        binding.phoneNumberValue.text = prefs.getString("user_phone", "N/A") ?: "N/A"
+        binding.locationValue.text = prefs.getString("user_location", "N/A") ?: "N/A"
+        binding.dateOfBirthValue.text = prefs.getString("user_date_of_birth", "N/A") ?: "N/A"
+
+        val fullName = "${prefs.getString("user_first_name", "")} ${prefs.getString("user_last_name", "")}".trim()
+        binding.userFullName.text = fullName.ifEmpty { "User" }
+        binding.userEmailHeader.text = prefs.getString("user_email", "N/A") ?: "N/A"
     }
 
 }
