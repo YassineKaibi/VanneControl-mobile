@@ -111,6 +111,59 @@ interface ApiService {
     ): Response<PistonControlResponse>
 
     // =====================
+    // SCHEDULES
+    // =====================
+
+    /**
+     * POST /schedules
+     * Créer un nouveau planning automatisé
+     * Requires: Authorization header avec JWT token
+     */
+    @POST("schedules")
+    suspend fun createSchedule(
+        @Body request: CreateScheduleRequest
+    ): Response<ScheduleResponse>
+
+    /**
+     * GET /schedules
+     * Récupérer tous les plannings de l'utilisateur
+     * Requires: Authorization header avec JWT token
+     */
+    @GET("schedules")
+    suspend fun getSchedules(): Response<SchedulesListResponse>
+
+    /**
+     * GET /schedules/{id}
+     * Récupérer un planning spécifique par ID
+     * Requires: Authorization header avec JWT token
+     */
+    @GET("schedules/{id}")
+    suspend fun getSchedule(
+        @Path("id") scheduleId: String
+    ): Response<ScheduleResponse>
+
+    /**
+     * PATCH /schedules/{id}
+     * Mettre à jour un planning existant (mise à jour partielle)
+     * Requires: Authorization header avec JWT token
+     */
+    @PATCH("schedules/{id}")
+    suspend fun updateSchedule(
+        @Path("id") scheduleId: String,
+        @Body request: UpdateScheduleRequest
+    ): Response<ScheduleResponse>
+
+    /**
+     * DELETE /schedules/{id}
+     * Supprimer un planning
+     * Requires: Authorization header avec JWT token
+     */
+    @DELETE("schedules/{id}")
+    suspend fun deleteSchedule(
+        @Path("id") scheduleId: String
+    ): Response<DeleteScheduleResponse>
+
+    // =====================
     // HEALTH CHECK
     // =====================
 
