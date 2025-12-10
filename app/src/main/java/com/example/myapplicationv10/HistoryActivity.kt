@@ -107,6 +107,7 @@ class HistoryActivity : BaseActivity() {
         for (event in telemetryEvents) {
             try {
                 // Parse payload to extract piston number
+                @Suppress("UNCHECKED_CAST")
                 val payload = event.payload?.let { gson.fromJson(it, Map::class.java) as? Map<String, Any> }
                 val pistonNumber = (payload?.get("piston_number") as? Double)?.toInt() ?: 1
 

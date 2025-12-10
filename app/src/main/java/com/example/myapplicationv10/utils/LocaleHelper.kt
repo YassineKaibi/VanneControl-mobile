@@ -39,7 +39,7 @@ object LocaleHelper {
      * Update app resources with selected language
      */
     private fun updateResources(context: Context, languageCode: String): Context {
-        val locale = Locale(languageCode)
+        val locale = Locale.forLanguageTag(languageCode)
         Locale.setDefault(locale)
 
         val resources = context.resources
