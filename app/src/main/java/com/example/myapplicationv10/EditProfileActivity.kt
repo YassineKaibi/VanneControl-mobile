@@ -68,7 +68,23 @@ class EditProfileActivity : AppCompatActivity() {
     private fun loadCurrentData() {
         binding.firstNameEdit.setText(intent.getStringExtra("firstName") ?: "")
         binding.lastNameEdit.setText(intent.getStringExtra("lastName") ?: "")
-        binding.dateOfBirthEdit.setText(intent.getStringExtra("dateOfBirth") ?: "")
+
+        // Handle date of birth - don't show "N/A"
+        val dateOfBirth = intent.getStringExtra("dateOfBirth") ?: ""
+        if (dateOfBirth.isNotEmpty() && dateOfBirth != "N/A") {
+            binding.dateOfBirthEdit.setText(dateOfBirth)
+            // Parse existing date to update selectedDate calendar
+            try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val date = sdf.parse(dateOfBirth)
+                if (date != null) {
+                    selectedDate.time = date
+                }
+            } catch (e: Exception) {
+                // If parsing fails, keep current date
+            }
+        }
+
         binding.emailEdit.setText(intent.getStringExtra("email") ?: "")
         binding.phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "")
         binding.locationEdit.setText(intent.getStringExtra("location") ?: "")
@@ -197,7 +213,12 @@ class EditProfileActivity : AppCompatActivity() {
             val location = binding.locationEdit.text.toString().trim()
 
             // Convertir la date du format dd/MM/yyyy au format yyyy-MM-dd pour l'API
-            val dateForApi = convertDateToApiFormat(dateOfBirth)
+            // Si vide, envoyer null au lieu d'une chaîne vide
+            val dateForApi = if (dateOfBirth.isNotEmpty()) {
+                convertDateToApiFormat(dateOfBirth)
+            } else {
+                null
+            }
 
             // Appeler le ViewModel pour mettre à jour le profil
             viewModel.updateUserProfile(
@@ -236,10 +257,7 @@ class EditProfileActivity : AppCompatActivity() {
             binding.lastNameEdit.error = "Last name is required"
             isValid = false
         }
-        if (binding.dateOfBirthEdit.text.toString().trim().isEmpty()) {
-            binding.dateOfBirthEdit.error = "Date of birth is required"
-            isValid = false
-        }
+        // Date of birth is now optional - no validation needed
         val email = binding.emailEdit.text.toString().trim()
         if (email.isEmpty()) {
             binding.emailEdit.error = "Email is required"

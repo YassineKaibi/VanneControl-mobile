@@ -34,10 +34,10 @@ class ProfileActivity : BaseActivity() {
         viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
 
         // 1️⃣ Initialiser le launcher pour EditProfileActivity
-        val editProfileLauncher = registerForActivityResult(
+        editProfileLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
+            if (result.resultCode == RESULT_OK) {
                 // Reload profile data from backend after edit
                 viewModel.loadUserProfile()
             }
