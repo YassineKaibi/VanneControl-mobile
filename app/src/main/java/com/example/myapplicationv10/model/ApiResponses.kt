@@ -66,3 +66,111 @@ data class ErrorResponse(
     @SerializedName("message")
     val message: String? = null
 )
+
+/**
+ * ScheduleResponse - Réponse contenant un planning
+ */
+data class ScheduleResponse(
+    @SerializedName("id")
+    val id: String,
+
+    @SerializedName("name")
+    val name: String,
+
+    @SerializedName("deviceId")
+    val deviceId: String,
+
+    @SerializedName("pistonNumber")
+    val pistonNumber: Int,
+
+    @SerializedName("action")
+    val action: String,
+
+    @SerializedName("cronExpression")
+    val cronExpression: String,
+
+    @SerializedName("enabled")
+    val enabled: Boolean,
+
+    @SerializedName("userId")
+    val userId: String,
+
+    @SerializedName("createdAt")
+    val createdAt: String,
+
+    @SerializedName("updatedAt")
+    val updatedAt: String
+)
+
+/**
+ * SchedulesListResponse - Réponse contenant la liste des plannings
+ */
+data class SchedulesListResponse(
+    @SerializedName("schedules")
+    val schedules: List<ScheduleResponse>
+)
+
+/**
+ * DeleteScheduleResponse - Réponse après suppression d'un planning
+ */
+data class DeleteScheduleResponse(
+    @SerializedName("message")
+    val message: String
+)
+
+/**
+ * DeviceStatsResponse - Statistiques pour un appareil
+ */
+data class DeviceStatsResponse(
+    @SerializedName("deviceId")
+    val deviceId: String,
+
+    @SerializedName("deviceName")
+    val deviceName: String,
+
+    @SerializedName("status")
+    val status: String,
+
+    @SerializedName("activePistons")
+    val activePistons: Int,
+
+    @SerializedName("totalPistons")
+    val totalPistons: Int,
+
+    @SerializedName("totalEvents")
+    val totalEvents: Long,
+
+    @SerializedName("lastActivity")
+    val lastActivity: String?
+)
+
+/**
+ * TelemetryEvent - Événement de télémétrie (historique des actions)
+ */
+data class TelemetryEvent(
+    @SerializedName("id")
+    val id: Long,
+
+    @SerializedName("deviceId")
+    val deviceId: String,
+
+    @SerializedName("pistonId")
+    val pistonId: String?,
+
+    @SerializedName("eventType")
+    val eventType: String, // "activated" ou "deactivated"
+
+    @SerializedName("payload")
+    val payload: String?,
+
+    @SerializedName("createdAt")
+    val createdAt: String
+)
+
+/**
+ * TelemetryListResponse - Réponse contenant la liste des événements de télémétrie
+ */
+data class TelemetryListResponse(
+    @SerializedName("telemetry")
+    val telemetry: List<TelemetryEvent>
+)

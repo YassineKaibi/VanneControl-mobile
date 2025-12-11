@@ -76,3 +76,43 @@ data class UpdatePreferencesRequest(
     @SerializedName("preferences")
     val preferences: String
 )
+
+/**
+ * CreateScheduleRequest - Corps de la requête pour créer un planning automatisé
+ */
+data class CreateScheduleRequest(
+    @SerializedName("name")
+    val name: String,
+
+    @SerializedName("deviceId")
+    val deviceId: String,
+
+    @SerializedName("pistonNumber")
+    val pistonNumber: Int,
+
+    @SerializedName("action")
+    val action: String, // "ACTIVATE" ou "DEACTIVATE"
+
+    @SerializedName("cronExpression")
+    val cronExpression: String,
+
+    @SerializedName("enabled")
+    val enabled: Boolean = true
+)
+
+/**
+ * UpdateScheduleRequest - Corps de la requête pour mettre à jour un planning
+ */
+data class UpdateScheduleRequest(
+    @SerializedName("name")
+    val name: String? = null,
+
+    @SerializedName("action")
+    val action: String? = null,
+
+    @SerializedName("cronExpression")
+    val cronExpression: String? = null,
+
+    @SerializedName("enabled")
+    val enabled: Boolean? = null
+)

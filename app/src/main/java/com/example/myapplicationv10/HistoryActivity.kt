@@ -8,10 +8,21 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplicationv10.databinding.ActivityHistoryBinding
+import com.example.myapplicationv10.model.TelemetryEvent
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.HistoryViewModel
 import com.google.android.material.chip.Chip
+import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class HistoryActivity : BaseActivity() {
@@ -28,6 +39,7 @@ class HistoryActivity : BaseActivity() {
 
     private lateinit var binding: ActivityHistoryBinding
     private lateinit var adapter: HistoryAdapter
+    private lateinit var viewModel: HistoryViewModel
 
     private val fullHistory = mutableListOf<ValveAction>()
     private var filteredHistory = mutableListOf<ValveAction>()
@@ -49,43 +61,88 @@ class HistoryActivity : BaseActivity() {
             insets
         }
 
+        // Initialize ViewModel
+        viewModel = ViewModelProvider(this)[HistoryViewModel::class.java]
+
         setupBackButton()
-        generateSampleHistory()
         setupFilterPanel()
         setupRecyclerView()
-        updateResultsCount()
+
+        // Observe history data
+        observeViewModel()
+
+        // Load history from backend
+        viewModel.loadHistory()
     }
 
     private fun setupBackButton() {
         binding.backButton.setOnClickListener { finish() }
     }
 
-    private fun generateSampleHistory() {
-        val calendar = Calendar.getInstance()
-        val users = listOf("Admin", "Operateur A", "Operateur B", "Système Auto")
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            viewModel.historyState.collect { result ->
+                when (result) {
+                    is NetworkResult.Success -> {
+                        loadHistoryFromTelemetry(result.data)
+                    }
+                    is NetworkResult.Error -> {
+                        Snackbar.make(binding.root, result.message, Snackbar.LENGTH_LONG).show()
+                    }
+                    is NetworkResult.Loading -> {
+                        // Show loading state if needed
+                    }
+                    is NetworkResult.Idle -> {
+                        // Initial state
+                    }
+                }
+            }
+        }
+    }
 
-        for (i in 1..100) {
-            calendar.add(Calendar.HOUR, -i * 2)
-            calendar.add(Calendar.MINUTE, -(i * 3))
-            if (i % 10 == 0) calendar.add(Calendar.DAY_OF_MONTH, -15)
-            if (i % 30 == 0) calendar.add(Calendar.YEAR, -1)
-            val valveId = (1..8).random()
-            val isOpening = i % 2 == 0
+    private fun loadHistoryFromTelemetry(telemetryEvents: List<TelemetryEvent>) {
+        fullHistory.clear()
+        val gson = Gson()
 
-            fullHistory.add(
-                ValveAction(
-                    valveId = valveId,
-                    valveName = "Valve $valveId",
-                    action = if (isOpening) "Opened" else "Closed",
-                    timestamp = calendar.time.clone() as Date,
-                    user = users.random(),
-                    currentState = isOpening
+        for (event in telemetryEvents) {
+            try {
+                // Parse payload to extract piston number
+                @Suppress("UNCHECKED_CAST")
+                val payload = event.payload?.let { gson.fromJson(it, Map::class.java) as? Map<String, Any> }
+                val pistonNumber = (payload?.get("piston_number") as? Double)?.toInt() ?: 1
+
+                // Parse timestamp
+                val instant = Instant.parse(event.createdAt)
+                val date = Date.from(instant)
+
+                // Map event type to action
+                val action = when (event.eventType) {
+                    "activated" -> "Opened"
+                    "deactivated" -> "Closed"
+                    else -> event.eventType
+                }
+
+                fullHistory.add(
+                    ValveAction(
+                        valveId = pistonNumber,
+                        valveName = "Valve $pistonNumber",
+                        action = action,
+                        timestamp = date,
+                        user = "System", // Backend doesn't track user in telemetry
+                        currentState = event.eventType == "activated"
+                    )
                 )
-            )
+            } catch (e: Exception) {
+                // Skip malformed events
+                e.printStackTrace()
+            }
         }
 
         fullHistory.sortByDescending { it.timestamp }
+        filteredHistory.clear()
         filteredHistory.addAll(fullHistory)
+        adapter.notifyDataSetChanged()
+        updateResultsCount()
     }
 
     private fun setupFilterPanel() {
@@ -183,31 +240,37 @@ class HistoryActivity : BaseActivity() {
     }
 
     private fun applyFilters() {
-        filteredHistory.clear()
-        var result = fullHistory.toList()
-
-        if (selectedValves.isNotEmpty()) result = result.filter { it.valveId in selectedValves }
-        if (selectedAction != null) result = result.filter { it.action == selectedAction }
-        if (startDate != null) result = result.filter {
-            val actionCalendar = Calendar.getInstance().apply { time = it.timestamp }
-            actionCalendar.timeInMillis >= startDate!!.timeInMillis
-        }
-        if (endDate != null) {
-            val endOfDay = (endDate!!.clone() as Calendar).apply {
-                set(Calendar.HOUR_OF_DAY, 23)
-                set(Calendar.MINUTE, 59)
-                set(Calendar.SECOND, 59)
-            }
-            result = result.filter {
-                val actionCalendar = Calendar.getInstance().apply { time = it.timestamp }
-                actionCalendar.timeInMillis <= endOfDay.timeInMillis
-            }
+        // Prepare filter parameters for backend
+        val pistonNumber = if (selectedValves.size == 1) selectedValves.first() else null
+        val action = when (selectedAction) {
+            "Opened" -> "activated"
+            "Closed" -> "deactivated"
+            else -> null
         }
 
-        filteredHistory.addAll(result)
-        adapter.notifyDataSetChanged()
+        // Convert dates to ISO format for backend
+        val startDateIso = startDate?.let {
+            Instant.ofEpochMilli(it.timeInMillis).toString()
+        }
+        val endDateIso = endDate?.let {
+            val endOfDay = it.clone() as Calendar
+            endOfDay.set(Calendar.HOUR_OF_DAY, 23)
+            endOfDay.set(Calendar.MINUTE, 59)
+            endOfDay.set(Calendar.SECOND, 59)
+            Instant.ofEpochMilli(endOfDay.timeInMillis).toString()
+        }
+
+        // Load filtered data from backend
+        viewModel.loadHistory(
+            deviceId = null,
+            pistonNumber = pistonNumber,
+            action = action,
+            startDate = startDateIso,
+            endDate = endDateIso,
+            limit = 1000
+        )
+
         updateActiveFiltersChips()
-        updateResultsCount()
     }
 
     private fun updateActiveFiltersChips() {
@@ -277,7 +340,11 @@ class HistoryActivity : BaseActivity() {
         binding.startDateButton.text = "Date de début"
         binding.endDateButton.text = "Date de fin"
 
-        applyFilters()
+        // Reload all history from backend without filters
+        viewModel.loadHistory()
+
+        binding.activeFiltersChipGroup.removeAllViews()
+        binding.activeFiltersSection.visibility = View.GONE
     }
 
     private fun updateResultsCount() {
