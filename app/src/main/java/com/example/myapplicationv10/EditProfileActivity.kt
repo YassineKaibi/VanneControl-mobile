@@ -66,12 +66,12 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun loadCurrentData() {
-        binding.firstNameEdit.setText(intent.getStringExtra("firstName") ?: "Yassine")
-        binding.lastNameEdit.setText(intent.getStringExtra("lastName") ?: "Channa")
-        binding.dateOfBirthEdit.setText(intent.getStringExtra("dateOfBirth") ?: "15/03/1995")
-        binding.emailEdit.setText(intent.getStringExtra("email") ?: "admin@vannecontrol.com")
-        binding.phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "+216 XX XXX XXX")
-        binding.locationEdit.setText(intent.getStringExtra("location") ?: "Houmt Souk, Medenine, Tunisia")
+        binding.firstNameEdit.setText(intent.getStringExtra("firstName") ?: "")
+        binding.lastNameEdit.setText(intent.getStringExtra("lastName") ?: "")
+        binding.dateOfBirthEdit.setText(intent.getStringExtra("dateOfBirth") ?: "")
+        binding.emailEdit.setText(intent.getStringExtra("email") ?: "")
+        binding.phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "")
+        binding.locationEdit.setText(intent.getStringExtra("location") ?: "")
         binding.numberOfValvesEdit.setText(intent.getIntExtra("numberOfValves", 8).toString())
     }
 
