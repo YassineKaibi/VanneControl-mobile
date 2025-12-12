@@ -7,6 +7,7 @@ import com.example.myapplicationv10.model.Device
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.repository.AuthRepository
 import com.example.myapplicationv10.repository.DeviceRepository
+import com.example.myapplicationv10.utils.ValveLimitManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,17 +69,25 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     /**
      * Obtenir les pistons actifs de tous les appareils
+     * Filtre par état actif ET limite de valve configurée
      */
     fun getActivePistons(): List<Pair<Device, com.example.myapplicationv10.model.Piston>> {
         val currentState = _devicesState.value
         if (currentState is NetworkResult.Success) {
             val devices = currentState.data
             val activePistons = mutableListOf<Pair<Device, com.example.myapplicationv10.model.Piston>>()
+            val valveLimitManager = ValveLimitManager.getInstance(getApplication())
 
             devices.forEach { device ->
-                device.pistons.filter { it.state == "active" }.forEach { piston ->
-                    activePistons.add(Pair(device, piston))
-                }
+                device.pistons
+                    .filter { piston ->
+                        // Must be active AND within enabled valve limit
+                        piston.state == "active" &&
+                        valveLimitManager.isValveEnabled(piston.pistonNumber)
+                    }
+                    .forEach { piston ->
+                        activePistons.add(Pair(device, piston))
+                    }
             }
 
             return activePistons

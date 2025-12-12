@@ -119,9 +119,21 @@ class DashboardActivity : BaseActivity() {
                     is NetworkResult.Success -> {
                         binding.swipeRefreshLayout.isRefreshing = false
                         val activePistons = viewModel.getActivePistons()
+
+                        // Convert to Valve objects for adapter
+                        val activeValves = activePistons.map { (device, piston) ->
+                            Valve(
+                                name = "Valve ${piston.pistonNumber}",
+                                lastChanged = piston.lastTriggered ?: "Unknown"
+                            )
+                        }
+
+                        // Update adapter
+                        activeValvesAdapter.updateValves(activeValves)
+
                         Toast.makeText(
                             this@DashboardActivity,
-                            "${result.data.size} appareil(s) chargé(s)",
+                            "${result.data.size} device(s), ${activeValves.size} active valve(s)",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

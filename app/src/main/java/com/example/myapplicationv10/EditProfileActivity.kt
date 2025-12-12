@@ -88,7 +88,18 @@ class EditProfileActivity : AppCompatActivity() {
         binding.emailEdit.setText(intent.getStringExtra("email") ?: "")
         binding.phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "")
         binding.locationEdit.setText(intent.getStringExtra("location") ?: "")
-        binding.numberOfValvesEdit.setText(intent.getIntExtra("numberOfValves", 8).toString())
+
+        // Load valve limit from SharedPreferences
+        val valveLimitManager = ValveLimitManager.getInstance(this)
+        var currentLimit = valveLimitManager.getValveLimit()
+
+        // Migration: If it's default (0) and we have intent data, use that as migration
+        if (currentLimit == 0 && intent.hasExtra("numberOfValves")) {
+            currentLimit = intent.getIntExtra("numberOfValves", 0).coerceIn(0, 8)
+            valveLimitManager.setValveLimit(currentLimit)
+        }
+
+        binding.numberOfValvesEdit.setText(currentLimit.toString())
     }
 
     private fun showDatePickerDialog() {
@@ -205,6 +216,10 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun saveProfile() {
         if (validateInputs()) {
+            // Save valve limit locally first
+            val valveLimit = binding.numberOfValvesEdit.text.toString().trim().toInt()
+            ValveLimitManager.getInstance(this).setValveLimit(valveLimit)
+
             // Récupérer les valeurs
             val firstName = binding.firstNameEdit.text.toString().trim()
             val lastName = binding.lastNameEdit.text.toString().trim()
@@ -221,6 +236,7 @@ class EditProfileActivity : AppCompatActivity() {
             }
 
             // Appeler le ViewModel pour mettre à jour le profil
+            // Note: numberOfValves is NOT sent to backend (saved locally only)
             viewModel.updateUserProfile(
                 firstName = firstName,
                 lastName = lastName,
@@ -284,11 +300,11 @@ class EditProfileActivity : AppCompatActivity() {
             isValid = false
         } else {
             val valves = valvesText.toIntOrNull()
-            if (valves == null || valves < 1) {
-                binding.numberOfValvesEdit.error = "Must be at least 1"
+            if (valves == null || valves < 0) {
+                binding.numberOfValvesEdit.error = "Must be at least 0"
                 isValid = false
-            } else if (valves > 50) {
-                binding.numberOfValvesEdit.error = "Maximum 50 valves"
+            } else if (valves > 8) {
+                binding.numberOfValvesEdit.error = "Maximum 8 valves"
                 isValid = false
             }
         }
