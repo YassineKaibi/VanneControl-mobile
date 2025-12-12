@@ -223,19 +223,18 @@ class ValveManagementActivity : BaseActivity() {
      */
     private fun showConfirmationDialog(pistonNumber: Int) {
         val piston = viewModel.getPiston(pistonNumber)
-        if (piston == null) {
-            Toast.makeText(this, "Piston non trouvé", Toast.LENGTH_SHORT).show()
-            return
-        }
 
-        val action = if (piston.state == Constants.STATE_ACTIVE)
+        // If piston doesn't exist locally, assume it's inactive
+        // The backend will create it lazily on activation
+        val currentState = piston?.state ?: Constants.STATE_INACTIVE
+        val action = if (currentState == Constants.STATE_ACTIVE)
             "désactiver" else "activer"
 
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
             .setMessage("Voulez-vous vraiment $action le Piston $pistonNumber ?")
             .setPositiveButton("Oui") { _, _ ->
-                viewModel.togglePiston(pistonNumber, piston.state)
+                viewModel.togglePiston(pistonNumber, currentState)
             }
             .setNegativeButton("Annuler", null)
             .show()
