@@ -47,6 +47,7 @@ class ProfileActivity : BaseActivity() {
         setupTabNavigation()
         setupLogout()
         observeProfileState()
+        loadValveLimit()
 
         // Load user profile from backend
         viewModel.loadUserProfile()
@@ -62,7 +63,7 @@ class ProfileActivity : BaseActivity() {
             intent.putExtra("email", binding.emailValue.text.toString())
             intent.putExtra("phoneNumber", binding.phoneNumberValue.text.toString())
             intent.putExtra("location", binding.locationValue.text.toString())
-            intent.putExtra("numberOfValves", binding.numberOfValvesValue.text.toString().toIntOrNull() ?: 8)
+            intent.putExtra("numberOfValves", binding.numberOfValvesValue.text.toString().toIntOrNull() ?: 0)
 
             editProfileLauncher.launch(intent)
         }
@@ -207,6 +208,18 @@ class ProfileActivity : BaseActivity() {
         val fullName = "${prefs.getString("user_first_name", "")} ${prefs.getString("user_last_name", "")}".trim()
         binding.userFullName.text = fullName.ifEmpty { "User" }
         binding.userEmailHeader.text = prefs.getString("user_email", "N/A") ?: "N/A"
+    }
+
+    private fun loadValveLimit() {
+        val valveLimitManager = ValveLimitManager.getInstance(this)
+        val valveLimit = valveLimitManager.getValveLimit()
+        binding.numberOfValvesValue.text = "$valveLimit valves to manage"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reload valve limit when returning from EditProfileActivity
+        loadValveLimit()
     }
 
 }

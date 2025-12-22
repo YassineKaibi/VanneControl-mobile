@@ -48,6 +48,7 @@ object Constants {
     const val PREFS_AUTH_TOKEN = "auth_token"
     const val PREFS_USER_ID = "user_id"
     const val PREFS_USER_EMAIL = "user_email"
+    const val PREFS_VALVE_LIMIT = "valve_limit"
 
     // =====================
     // DEVICE & PISTON

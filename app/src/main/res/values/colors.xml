@@ -5,4 +5,8 @@
     <color name="green">#156f35</color>
     <color name="Honeydew">#DFEAD8</color>
 
+    <!-- Colors for disabled valves -->
+    <color name="gray_disabled">#BDBDBD</color>
+    <color name="gray_icon">#757575</color>
+
 </resources>
