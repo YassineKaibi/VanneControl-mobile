@@ -39,7 +39,6 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:src="@drawable/account_circle"
-            android:background="@android:color/white"
             android:padding="10dp"
             android:contentDescription="Profile"
             android:scaleType="centerInside"
@@ -217,7 +216,7 @@
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:src="@drawable/button_default"
+                            android:src="@drawable/timing_plan"
                             android:background="@android:color/transparent"
                             android:padding="8dp"
                             android:contentDescription="Timing Plan" />

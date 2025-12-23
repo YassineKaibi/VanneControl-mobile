@@ -55,7 +55,6 @@
         android:background="@drawable/button_selector"
         android:textColor="@color/text_color_selector"
         android:text="@string/get_started"
-
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"

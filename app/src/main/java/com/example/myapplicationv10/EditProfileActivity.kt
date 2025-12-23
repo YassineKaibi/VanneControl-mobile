@@ -1,26 +1,23 @@
 package com.example.myapplicationv10
 
 import android.app.DatePickerDialog
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplicationv10.databinding.ActivityEditProfileBinding
 import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.utils.ValveLimitManager
 import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-class EditProfileActivity : AppCompatActivity() {
+class EditProfileActivity : BaseActivity() {
 
-    // ViewModel
     private val viewModel: ProfileViewModel by viewModels()
-
     private lateinit var binding: ActivityEditProfileBinding
     private var selectedDate: Calendar = Calendar.getInstance()
 
@@ -54,7 +51,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun setupSaveButtons() {
         binding.saveButton.setOnClickListener { saveProfile() }
-        binding.saveChangesButton.setOnClickListener { saveProfile() }
+        //binding.saveChangesButton.setOnClickListener { saveProfile() }
     }
 
     private fun setupDatePicker() {
@@ -69,11 +66,9 @@ class EditProfileActivity : AppCompatActivity() {
         binding.firstNameEdit.setText(intent.getStringExtra("firstName") ?: "")
         binding.lastNameEdit.setText(intent.getStringExtra("lastName") ?: "")
 
-        // Handle date of birth - don't show "N/A"
         val dateOfBirth = intent.getStringExtra("dateOfBirth") ?: ""
         if (dateOfBirth.isNotEmpty() && dateOfBirth != "N/A") {
             binding.dateOfBirthEdit.setText(dateOfBirth)
-            // Parse existing date to update selectedDate calendar
             try {
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 val date = sdf.parse(dateOfBirth)
@@ -81,7 +76,7 @@ class EditProfileActivity : AppCompatActivity() {
                     selectedDate.time = date
                 }
             } catch (e: Exception) {
-                // If parsing fails, keep current date
+                // Keep current date
             }
         }
 
@@ -89,11 +84,9 @@ class EditProfileActivity : AppCompatActivity() {
         binding.phoneEdit.setText(intent.getStringExtra("phoneNumber") ?: "")
         binding.locationEdit.setText(intent.getStringExtra("location") ?: "")
 
-        // Load valve limit from SharedPreferences
         val valveLimitManager = ValveLimitManager.getInstance(this)
         var currentLimit = valveLimitManager.getValveLimit()
 
-        // Migration: If it's default (0) and we have intent data, use that as migration
         if (currentLimit == 0 && intent.hasExtra("numberOfValves")) {
             currentLimit = intent.getIntExtra("numberOfValves", 0).coerceIn(0, 8)
             valveLimitManager.setValveLimit(currentLimit)
@@ -162,18 +155,11 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        // Observer l'état de mise à jour du profil
         lifecycleScope.launch {
             viewModel.updateProfileState.collect { result ->
                 when (result) {
-                    is NetworkResult.Idle -> {
-                        // État initial - Ne rien faire
-                    }
-
-                    is NetworkResult.Loading -> {
-                        showLoading()
-                    }
-
+                    is NetworkResult.Idle -> {}
+                    is NetworkResult.Loading -> showLoading()
                     is NetworkResult.Success -> {
                         hideLoading()
                         Snackbar.make(
@@ -182,13 +168,11 @@ class EditProfileActivity : AppCompatActivity() {
                             Snackbar.LENGTH_LONG
                         ).show()
 
-                        // Attendre un peu avant de fermer pour montrer le message
                         binding.root.postDelayed({
                             setResult(RESULT_OK)
                             finish()
                         }, 1500)
                     }
-
                     is NetworkResult.Error -> {
                         hideLoading()
                         Snackbar.make(
@@ -204,53 +188,44 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun showLoading() {
         binding.saveButton.isEnabled = false
-        binding.saveChangesButton.isEnabled = false
-        binding.saveChangesButton.text = "Saving..."
+        //binding.saveChangesButton.isEnabled = false
+        //binding.saveChangesButton.text = "Saving..."
     }
 
     private fun hideLoading() {
         binding.saveButton.isEnabled = true
-        binding.saveChangesButton.isEnabled = true
-        binding.saveChangesButton.text = "Save Changes"
+        //binding.saveChangesButton.isEnabled = true
+        //binding.saveChangesButton.text = "Save Changes"
     }
 
     private fun saveProfile() {
         if (validateInputs()) {
-            // Save valve limit locally first
             val valveLimit = binding.numberOfValvesEdit.text.toString().trim().toInt()
             ValveLimitManager.getInstance(this).setValveLimit(valveLimit)
 
-            // Récupérer les valeurs
             val firstName = binding.firstNameEdit.text.toString().trim()
             val lastName = binding.lastNameEdit.text.toString().trim()
             val dateOfBirth = binding.dateOfBirthEdit.text.toString().trim()
             val phone = binding.phoneEdit.text.toString().trim()
             val location = binding.locationEdit.text.toString().trim()
 
-            // Convertir la date du format dd/MM/yyyy au format yyyy-MM-dd pour l'API
-            // Si vide, envoyer null au lieu d'une chaîne vide
             val dateForApi = if (dateOfBirth.isNotEmpty()) {
                 convertDateToApiFormat(dateOfBirth)
             } else {
                 null
             }
 
-            // Appeler le ViewModel pour mettre à jour le profil
-            // Note: numberOfValves is NOT sent to backend (saved locally only)
             viewModel.updateUserProfile(
                 firstName = firstName,
                 lastName = lastName,
                 phoneNumber = phone,
                 dateOfBirth = dateForApi,
                 location = location,
-                avatarUrl = null  // TODO: Implement avatar upload
+                avatarUrl = null
             )
         }
     }
 
-    /**
-     * Convertir la date du format dd/MM/yyyy au format yyyy-MM-dd
-     */
     private fun convertDateToApiFormat(date: String): String {
         return try {
             val inputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -258,7 +233,7 @@ class EditProfileActivity : AppCompatActivity() {
             val parsedDate = inputFormat.parse(date)
             outputFormat.format(parsedDate!!)
         } catch (e: Exception) {
-            date  // Retourner la date originale en cas d'erreur
+            date
         }
     }
 
@@ -273,7 +248,6 @@ class EditProfileActivity : AppCompatActivity() {
             binding.lastNameEdit.error = "Last name is required"
             isValid = false
         }
-        // Date of birth is now optional - no validation needed
         val email = binding.emailEdit.text.toString().trim()
         if (email.isEmpty()) {
             binding.emailEdit.error = "Email is required"
@@ -322,5 +296,4 @@ class EditProfileActivity : AppCompatActivity() {
             .setNegativeButton("Keep Editing", null)
             .show()
     }
-
 }

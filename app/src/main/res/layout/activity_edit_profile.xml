@@ -407,6 +407,7 @@
             </androidx.cardview.widget.CardView>
 
             <!-- SAVE BUTTON -->
+            <!--
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/saveChangesButton"
                 android:layout_width="match_parent"
@@ -418,7 +419,7 @@
                 android:background="@drawable/button_selector"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="20dp" />
-
+            -->
         </LinearLayout>
 
     </ScrollView>
