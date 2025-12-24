@@ -2,254 +2,186 @@ package com.example.myapplicationv10
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
+import androidx.core.content.ContextCompat
 import com.example.myapplicationv10.databinding.ActivityTimingPlanBinding
-import com.example.myapplicationv10.model.CreateScheduleRequest
-import com.example.myapplicationv10.network.NetworkResult
-import com.example.myapplicationv10.repository.DeviceRepository
-import com.example.myapplicationv10.repository.ScheduleRepository
 import com.google.android.material.button.MaterialButton
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TimingPlanActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTimingPlanBinding
-    private val calendarStart = Calendar.getInstance()
-    private val calendarEnd = Calendar.getInstance()
 
-    private lateinit var scheduleRepository: ScheduleRepository
-    private lateinit var deviceRepository: DeviceRepository
+    private var selectedValveNumber: Int? = null
+    private var selectedAction: String? = null
+    private var selectedDateTime: Calendar? = null
 
-    private var selectedPistonNumber: Int? = null
-    private var deviceId: String? = null
+    private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTimingPlanBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        scheduleRepository = ScheduleRepository(this)
-        deviceRepository = DeviceRepository(this)
+        setupVanneButtons()
+        setupActionButtons()
+        setupDateTimePicker()
+        setupSaveButton()
+    }
 
-        // Récupérer le device ID de l'utilisateur
-        loadUserDevice()
+    private fun setupVanneButtons() {
+        val sharedPreferences = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
+        val numberOfValves = sharedPreferences.getInt("numberOfValvesValue", 8)
 
-        // Segmented Button
-        binding.segmentTop.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                when (checkedId) {
-                    binding.segVanne.id -> {
-                        binding.sectionVannes.visibility = android.view.View.VISIBLE
-                        binding.sectionStart.visibility = android.view.View.GONE
-                        binding.sectionEnd.visibility = android.view.View.GONE
-                    }
-                    binding.segStart.id -> {
-                        binding.sectionVannes.visibility = android.view.View.GONE
-                        binding.sectionStart.visibility = android.view.View.VISIBLE
-                        binding.sectionEnd.visibility = android.view.View.GONE
-                    }
-                    binding.segEnd.id -> {
-                        binding.sectionVannes.visibility = android.view.View.GONE
-                        binding.sectionStart.visibility = android.view.View.GONE
-                        binding.sectionEnd.visibility = android.view.View.VISIBLE
-                    }
-                }
-            }
-        }
+        Log.d("TimingPlanActivity", "Number of valves: $numberOfValves")
 
-        // Boutons vannes
-        val vanneButtons = listOf(
-            binding.v1, binding.v2, binding.v3, binding.v4,
-            binding.v5, binding.v6, binding.v7, binding.v8
+        val allVanneButtons = listOf(
+            binding.btnVanne1, binding.btnVanne2, binding.btnVanne3, binding.btnVanne4,
+            binding.btnVanne5, binding.btnVanne6, binding.btnVanne7, binding.btnVanne8
         )
-        vanneButtons.forEachIndexed { index, button ->
-            button.setOnClickListener {
-                selectedPistonNumber = index + 1
-                highlightSelectedVanne(button, vanneButtons)
-                Toast.makeText(this, "Vanne ${button.text} sélectionnée", Toast.LENGTH_SHORT).show()
-            }
-        }
 
-        // Date + heure début
-        binding.pickStart.setOnClickListener {
-            pickDateTime(calendarStart) { formatted ->
-                binding.startSelected.text = formatted
-            }
-        }
+        val greenColor = ContextCompat.getColor(this, R.color.green)
+        val blackColor = ContextCompat.getColor(this, R.color.black)
+        val whiteColor = ContextCompat.getColor(this, R.color.white)
 
-        // Date + heure fin
-        binding.pickEnd.setOnClickListener {
-            pickDateTime(calendarEnd) { formatted ->
-                binding.endSelected.text = formatted
-            }
-        }
-
-        // Bouton Appliquer le planning
-        binding.btnApplySchedule.setOnClickListener {
-            applySchedule()
-        }
-    }
-
-    private fun loadUserDevice() {
-        lifecycleScope.launch {
-            when (val result = deviceRepository.getDevices()) {
-                is NetworkResult.Success -> {
-                    if (result.data.isNotEmpty()) {
-                        deviceId = result.data[0].id
-                        Log.d("TimingPlan", "Device ID loaded: $deviceId")
-                    } else {
-                        Toast.makeText(
-                            this@TimingPlanActivity,
-                            "Aucun appareil trouvé. Veuillez d'abord configurer un appareil.",
-                            Toast.LENGTH_LONG
-                        ).show()
+        allVanneButtons.forEachIndexed { index, button ->
+            if (index < numberOfValves) {
+                button.visibility = View.VISIBLE
+                button.setOnClickListener {
+                    allVanneButtons.take(numberOfValves).forEach {
+                        it.setTextColor(blackColor)
+                        it.strokeColor = ColorStateList.valueOf(blackColor)
+                        it.setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     }
+
+                    button.setTextColor(whiteColor)
+                    button.strokeColor = ColorStateList.valueOf(greenColor)
+                    button.setBackgroundColor(greenColor)
+                    selectedValveNumber = index + 1
                 }
-                is NetworkResult.Error -> {
-                    Toast.makeText(
-                        this@TimingPlanActivity,
-                        "Erreur lors du chargement des appareils: ${result.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                else -> {}
+            } else {
+                button.visibility = View.GONE
             }
         }
     }
 
-    private fun highlightSelectedVanne(selected: MaterialButton, allButtons: List<MaterialButton>) {
-        allButtons.forEach { it.isChecked = false }
-        selected.isChecked = true
-    }
+    private fun setupActionButtons() {
+        val greenColor = ContextCompat.getColor(this, R.color.green)
+        val blackColor = ContextCompat.getColor(this, R.color.black)
+        val whiteColor = ContextCompat.getColor(this, R.color.white)
 
-    private fun applySchedule() {
-        // Validation
-        if (deviceId == null) {
-            Toast.makeText(this, "Chargement de l'appareil en cours...", Toast.LENGTH_SHORT).show()
-            return
+        binding.btnActionOpen.setOnClickListener {
+            binding.btnActionOpen.setTextColor(whiteColor)
+            binding.btnActionOpen.strokeColor = ColorStateList.valueOf(greenColor)
+            binding.btnActionOpen.setBackgroundColor(greenColor)
+
+            binding.btnActionClose.setTextColor(blackColor)
+            binding.btnActionClose.strokeColor = ColorStateList.valueOf(blackColor)
+            binding.btnActionClose.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+            selectedAction = "OPEN"
         }
 
-        if (selectedPistonNumber == null) {
-            Toast.makeText(this, "Veuillez sélectionner une vanne", Toast.LENGTH_SHORT).show()
-            return
-        }
+        binding.btnActionClose.setOnClickListener {
+            binding.btnActionClose.setTextColor(whiteColor)
+            binding.btnActionClose.strokeColor = ColorStateList.valueOf(greenColor)
+            binding.btnActionClose.setBackgroundColor(greenColor)
 
-        if (binding.startSelected.text == "Aucune date/heure sélectionnée") {
-            Toast.makeText(this, "Veuillez sélectionner une date de début", Toast.LENGTH_SHORT).show()
-            return
-        }
+            binding.btnActionOpen.setTextColor(blackColor)
+            binding.btnActionOpen.strokeColor = ColorStateList.valueOf(blackColor)
+            binding.btnActionOpen.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-        if (binding.endSelected.text == "Aucune date/heure sélectionnée") {
-            Toast.makeText(this, "Veuillez sélectionner une date de fin", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Créer deux plannings: un pour activer, un pour désactiver
-        createSchedules()
-    }
-
-    private fun createSchedules() {
-        val pistonNum = selectedPistonNumber ?: return
-        val devId = deviceId ?: return
-
-        lifecycleScope.launch {
-            // Convertir les calendriers en expressions cron (format: minute hour day month dayOfWeek)
-            val cronStart = calendarToCron(calendarStart)
-            val cronEnd = calendarToCron(calendarEnd)
-
-            // Planning pour activer (START)
-            val activateRequest = CreateScheduleRequest(
-                name = "Activation Vanne $pistonNum",
-                deviceId = devId,
-                pistonNumber = pistonNum,
-                action = "ACTIVATE",
-                cronExpression = cronStart,
-                enabled = true
-            )
-
-            // Planning pour désactiver (END)
-            val deactivateRequest = CreateScheduleRequest(
-                name = "Désactivation Vanne $pistonNum",
-                deviceId = devId,
-                pistonNumber = pistonNum,
-                action = "DEACTIVATE",
-                cronExpression = cronEnd,
-                enabled = true
-            )
-
-            Log.d("TimingPlan", "Creating ACTIVATE schedule: $activateRequest")
-            Log.d("TimingPlan", "Creating DEACTIVATE schedule: $deactivateRequest")
-
-            // Créer le premier planning (activation)
-            when (val result1 = scheduleRepository.createSchedule(activateRequest)) {
-                is NetworkResult.Success -> {
-                    Log.i("TimingPlan", "Schedule d'activation créé avec succès: ${result1.data.id}")
-
-                    // Créer le deuxième planning (désactivation)
-                    when (val result2 = scheduleRepository.createSchedule(deactivateRequest)) {
-                        is NetworkResult.Success -> {
-                            Log.i("TimingPlan", "Schedule de désactivation créé avec succès: ${result2.data.id}")
-                            Toast.makeText(
-                                this@TimingPlanActivity,
-                                "Plannings créés avec succès!",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            finish()
-                        }
-                        is NetworkResult.Error -> {
-                            Log.e("TimingPlan", "Erreur création désactivation: ${result2.message}")
-                            Toast.makeText(
-                                this@TimingPlanActivity,
-                                "Erreur: ${result2.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        else -> {}
-                    }
-                }
-                is NetworkResult.Error -> {
-                    Log.e("TimingPlan", "Erreur création activation: ${result1.message}")
-                    Toast.makeText(
-                        this@TimingPlanActivity,
-                        "Erreur: ${result1.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                else -> {}
-            }
+            selectedAction = "CLOSE"
         }
     }
 
-    /**
-     * Convertir un Calendar en expression cron
-     * Format cron: "minute hour day month dayOfWeek year"
-     * Exemple: "30 14 15 12 ? 2024" = 15 décembre 2024 à 14:30
-     */
-    private fun calendarToCron(calendar: Calendar): String {
-        val minute = calendar.get(Calendar.MINUTE)
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-        val month = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTH is 0-based
-        val year = calendar.get(Calendar.YEAR)
-
-        // Format Quartz: "second minute hour dayOfMonth month dayOfWeek year"
-        return "0 $minute $hour $day $month ? $year"
+    private fun setupDateTimePicker() {
+        binding.etDateTime.setOnClickListener {
+            showDatePicker()
+        }
     }
 
-    private fun pickDateTime(calendar: Calendar, callback: (String) -> Unit) {
-        DatePickerDialog(this, { _, year, month, day ->
-            calendar.set(year, month, day)
-            TimePickerDialog(this, { _, hour, minute ->
-                calendar.set(Calendar.HOUR_OF_DAY, hour)
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                showTimePicker(calendar)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        datePickerDialog.datePicker.minDate = System.currentTimeMillis()
+        datePickerDialog.show()
+    }
+
+    private fun showTimePicker(calendar: Calendar) {
+        val timePickerDialog = TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                 calendar.set(Calendar.MINUTE, minute)
-                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                callback(sdf.format(calendar.time))
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+                calendar.set(Calendar.SECOND, 0)
+
+                selectedDateTime = calendar
+                binding.etDateTime.setText(dateTimeFormat.format(calendar.time))
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        )
+
+        timePickerDialog.show()
+    }
+
+    private fun setupSaveButton() {
+        binding.btnSave.setOnClickListener {
+            if (validateInputs()) {
+                saveTiming()
+            }
+        }
+    }
+
+    private fun validateInputs(): Boolean {
+        if (selectedValveNumber == null) {
+            Toast.makeText(this, "Veuillez sélectionner une vanne", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (selectedAction == null) {
+            Toast.makeText(this, "Veuillez sélectionner une action", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (selectedDateTime == null) {
+            Toast.makeText(this, "Veuillez sélectionner la date et l'heure", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true
+    }
+
+    private fun saveTiming() {
+        val message = """
+            Plan enregistré:
+            Vanne: $selectedValveNumber
+            Action: $selectedAction
+            Date/Heure: ${dateTimeFormat.format(selectedDateTime!!.time)}
+        """.trimIndent()
+
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        finish()
     }
 }
