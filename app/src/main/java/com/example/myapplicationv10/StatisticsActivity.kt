@@ -29,7 +29,7 @@ class StatisticsActivity : BaseActivity() {
     private lateinit var binding: ActivityStatisticsBinding
     private lateinit var viewModel: StatisticsViewModel
 
-    private val selectedValves = mutableSetOf(1, 2, 3, 4, 5, 6, 7, 8)
+    private val selectedValves = mutableSetOf<Int>()
 
     private var totalValves = 8
     private var activeValves = 0
@@ -103,6 +103,7 @@ class StatisticsActivity : BaseActivity() {
                                 inactiveValves = device.pistons.count { it.state == "inactive" }
                                 maintenanceValves = 0
                                 setupStatisticsCards()
+                                setupValveChips()
 
                                 viewModel.loadDeviceStats(device.id)
                                 viewModel.loadHistory(deviceId = device.id, limit = 5000)
@@ -182,9 +183,10 @@ class StatisticsActivity : BaseActivity() {
                 Entry(index.toFloat(), cumulative)
             }
 
+            val colorIndex = (valveNum - 1) % valveColors.size
             val dataSet = LineDataSet(cumulativeEntries, "Valve $valveNum").apply {
-                color = valveColors[valveNum - 1]
-                setCircleColor(valveColors[valveNum - 1])
+                color = valveColors[colorIndex]
+                setCircleColor(valveColors[colorIndex])
                 lineWidth = 3f
                 circleRadius = 4f
                 setDrawCircleHole(true)
@@ -195,7 +197,7 @@ class StatisticsActivity : BaseActivity() {
                 cubicIntensity = 0.2f
                 setDrawFilled(true)
                 fillAlpha = 30
-                fillColor = valveColors[valveNum - 1]
+                fillColor = valveColors[colorIndex]
             }
             dataSets.add(dataSet)
         }
@@ -223,7 +225,14 @@ class StatisticsActivity : BaseActivity() {
 
     private fun setupValveChips() {
         binding.valveChipsContainer.removeAllViews()
-        for (i in 1..8) binding.valveChipsContainer.addView(createValveChip(i, valveColors[i - 1]))
+        selectedValves.clear()
+
+        for (i in 1..totalValves) {
+            val colorIndex = (i - 1) % valveColors.size
+            binding.valveChipsContainer.addView(createValveChip(i, valveColors[colorIndex]))
+            selectedValves.add(i)
+        }
+
         binding.valveChipsContainer.addView(createSelectAllButton())
         binding.valveChipsContainer.addView(createDeselectAllButton())
     }
@@ -270,7 +279,7 @@ class StatisticsActivity : BaseActivity() {
             background = createChipBackground(Color.parseColor("#4CAF50"), true)
             setOnClickListener {
                 selectedValves.clear()
-                selectedValves.addAll(1..8)
+                selectedValves.addAll(1..totalValves)
                 updateAllChipsAppearance(true)
                 currentDevice?.id?.let { viewModel.loadHistory(deviceId = it, limit = 5000) }
             }
@@ -308,10 +317,11 @@ class StatisticsActivity : BaseActivity() {
         }
 
     private fun updateAllChipsAppearance(selected: Boolean) {
-        for (i in 0 until 8) {
+        for (i in 0 until totalValves) {
             val chip = binding.valveChipsContainer.getChildAt(i) as? TextView
             chip?.let {
-                val color = valveColors[i]
+                val colorIndex = i % valveColors.size
+                val color = valveColors[colorIndex]
                 it.background = createChipBackground(color, selected)
                 it.setTextColor(if (selected) Color.WHITE else color)
             }
