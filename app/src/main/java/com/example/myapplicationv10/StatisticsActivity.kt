@@ -12,36 +12,33 @@ import androidx.lifecycle.lifecycleScope
 import com.example.myapplicationv10.model.Device
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.viewmodel.StatisticsViewModel
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.snackbar.Snackbar
 import com.example.myapplicationv10.databinding.ActivityStatisticsBinding
+import com.example.myapplicationv10.model.TelemetryEvent
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class StatisticsActivity : BaseActivity() {
-
 
     private lateinit var binding: ActivityStatisticsBinding
     private lateinit var viewModel: StatisticsViewModel
 
-    // Track which valves are selected for display (all selected by default)
     private val selectedValves = mutableSetOf(1, 2, 3, 4, 5, 6, 7, 8)
 
-    // Real data from backend
     private var totalValves = 8
     private var activeValves = 0
     private var inactiveValves = 0
     private var maintenanceValves = 0
     private var currentDevice: Device? = null
 
-    // Current period
     private var currentPeriod = "Last 24 hours"
 
-    // Period types
     private val periods = arrayOf(
         "Last 24 hours",
         "Last 7 days",
@@ -51,16 +48,15 @@ class StatisticsActivity : BaseActivity() {
         "Custom range"
     )
 
-    // Valve colors matching the chart
     private val valveColors = listOf(
-        Color.parseColor("#FF5252"),  // Red
-        Color.parseColor("#156f35"),  // Green
-        Color.parseColor("#FF9800"),  // Orange
-        Color.parseColor("#2196F3"),  // Blue
-        Color.parseColor("#E91E63"),  // Pink
-        Color.parseColor("#91BC21"),  // Lime
-        Color.parseColor("#9C27B0"),  // Purple
-        Color.parseColor("#00BCD4")   // Cyan
+        Color.parseColor("#FF5252"),
+        Color.parseColor("#156f35"),
+        Color.parseColor("#FF9800"),
+        Color.parseColor("#2196F3"),
+        Color.parseColor("#E91E63"),
+        Color.parseColor("#91BC21"),
+        Color.parseColor("#9C27B0"),
+        Color.parseColor("#00BCD4")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,8 +70,10 @@ class StatisticsActivity : BaseActivity() {
             insets
         }
 
-        // Initialize ViewModel
         viewModel = ViewModelProvider(this)[StatisticsViewModel::class.java]
+
+        val sharedPref = getSharedPreferences("VanneControl", MODE_PRIVATE)
+        totalValves = sharedPref.getInt("totalValves", 8)
 
         setupBackButton()
         setupStatisticsCards()
@@ -84,10 +82,7 @@ class StatisticsActivity : BaseActivity() {
         setupExportButton()
         setupLineChart()
 
-        // Observe data from backend
         observeViewModel()
-
-        // Load devices and stats
         viewModel.loadDevices()
     }
 
@@ -101,35 +96,23 @@ class StatisticsActivity : BaseActivity() {
                 when (result) {
                     is NetworkResult.Success -> {
                         if (result.data.isNotEmpty()) {
-                            // Use the first device for statistics
                             currentDevice = result.data.first()
                             currentDevice?.let { device ->
-                                // Calculate statistics from device pistons
                                 totalValves = device.pistons.size
                                 activeValves = device.pistons.count { it.state == "active" }
                                 inactiveValves = device.pistons.count { it.state == "inactive" }
-                                maintenanceValves = 0 // No maintenance state from backend
-
-                                // Update UI
+                                maintenanceValves = 0
                                 setupStatisticsCards()
 
-                                // Load detailed stats from backend
                                 viewModel.loadDeviceStats(device.id)
-
-                                // Load chart data (still uses sample data for now)
-                                loadChartData(currentPeriod)
+                                viewModel.loadHistory(deviceId = device.id, limit = 5000)
                             }
                         }
                     }
                     is NetworkResult.Error -> {
                         Snackbar.make(binding.root, result.message, Snackbar.LENGTH_LONG).show()
                     }
-                    is NetworkResult.Loading -> {
-                        // Show loading state if needed
-                    }
-                    is NetworkResult.Idle -> {
-                        // Initial state
-                    }
+                    else -> {}
                 }
             }
         }
@@ -138,20 +121,97 @@ class StatisticsActivity : BaseActivity() {
             viewModel.statsState.collect { result ->
                 when (result) {
                     is NetworkResult.Success -> {
-                        // Update with backend stats
                         val stats = result.data
                         totalValves = stats.totalPistons
                         activeValves = stats.activePistons
                         inactiveValves = stats.totalPistons - stats.activePistons
                         setupStatisticsCards()
                     }
-                    is NetworkResult.Error -> {
-                        // Stats failed to load, keep using device data
-                    }
                     else -> {}
                 }
             }
         }
+
+        lifecycleScope.launch {
+            viewModel.historyState.collect { result ->
+                when (result) {
+                    is NetworkResult.Success -> {
+                        updateChartFromHistory(result.data)
+                    }
+                    else -> {
+                        binding.activationsChart.clear()
+                        binding.activationsChart.setNoDataText("Aucune donnée disponible")
+                        binding.activationsChart.invalidate()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateChartFromHistory(events: List<TelemetryEvent>) {
+        val gson = Gson()
+        val valveData = mutableMapOf<Int, MutableList<Entry>>()
+
+        for (event in events) {
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val payload = event.payload?.let { gson.fromJson(it, Map::class.java) as? Map<String, Any> }
+                val pistonNumber = (payload?.get("piston_number") as? Double)?.toInt() ?: continue
+
+                if (pistonNumber !in selectedValves) continue
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                val timestamp = dateFormat.parse(event.createdAt.replace("Z", ""))?.time ?: continue
+
+                valveData.getOrPut(pistonNumber) { mutableListOf() }
+                    .add(Entry(timestamp.toFloat(), 1f))
+            } catch (e: Exception) {
+                continue
+            }
+        }
+
+        val dataSets = mutableListOf<LineDataSet>()
+
+        for ((valveNum, entries) in valveData.toSortedMap()) {
+            if (entries.isEmpty()) continue
+
+            entries.sortBy { it.x }
+            var cumulative = 0f
+            val cumulativeEntries = entries.mapIndexed { index, _ ->
+                cumulative++
+                Entry(index.toFloat(), cumulative)
+            }
+
+            val dataSet = LineDataSet(cumulativeEntries, "Valve $valveNum").apply {
+                color = valveColors[valveNum - 1]
+                setCircleColor(valveColors[valveNum - 1])
+                lineWidth = 3f
+                circleRadius = 4f
+                setDrawCircleHole(true)
+                circleHoleColor = Color.WHITE
+                circleHoleRadius = 2f
+                setDrawValues(false)
+                mode = LineDataSet.Mode.CUBIC_BEZIER
+                cubicIntensity = 0.2f
+                setDrawFilled(true)
+                fillAlpha = 30
+                fillColor = valveColors[valveNum - 1]
+            }
+            dataSets.add(dataSet)
+        }
+
+        val lineChart = binding.activationsChart
+        if (dataSets.isEmpty()) {
+            lineChart.clear()
+            lineChart.setNoDataText("Aucune donnée disponible pour la période sélectionnée")
+            lineChart.setNoDataTextColor(ContextCompat.getColor(this, R.color.black))
+            lineChart.invalidate()
+            return
+        }
+
+        lineChart.data = LineData(dataSets as List<LineDataSet>)
+        lineChart.invalidate()
+        lineChart.animateX(1000)
     }
 
     private fun setupStatisticsCards() {
@@ -191,7 +251,7 @@ class StatisticsActivity : BaseActivity() {
                     background = createChipBackground(color, true)
                     setTextColor(Color.WHITE)
                 }
-                loadChartData(currentPeriod)
+                currentDevice?.id?.let { viewModel.loadHistory(deviceId = it, limit = 5000) }
             }
         }
     }
@@ -212,7 +272,7 @@ class StatisticsActivity : BaseActivity() {
                 selectedValves.clear()
                 selectedValves.addAll(1..8)
                 updateAllChipsAppearance(true)
-                loadChartData(currentPeriod)
+                currentDevice?.id?.let { viewModel.loadHistory(deviceId = it, limit = 5000) }
             }
         }
     }
@@ -232,7 +292,7 @@ class StatisticsActivity : BaseActivity() {
             setOnClickListener {
                 selectedValves.clear()
                 updateAllChipsAppearance(false)
-                loadChartData(currentPeriod)
+                currentDevice?.id?.let { viewModel.loadHistory(deviceId = it, limit = 5000) }
             }
         }
     }
@@ -268,7 +328,11 @@ class StatisticsActivity : BaseActivity() {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
                 val selectedPeriod = periods[position]
                 currentPeriod = selectedPeriod
-                if (selectedPeriod == "Custom range") showCustomDateRangePicker() else loadChartData(selectedPeriod)
+                if (selectedPeriod == "Custom range") {
+                    showCustomDateRangePicker()
+                } else {
+                    currentDevice?.id?.let { viewModel.loadHistory(deviceId = it, limit = 5000) }
+                }
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         })
@@ -287,122 +351,22 @@ class StatisticsActivity : BaseActivity() {
         lineChart.setPinchZoom(true)
         lineChart.setDrawGridBackground(false)
         lineChart.setBackgroundColor(Color.WHITE)
+
         val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(false)
         xAxis.granularity = 1f
         xAxis.textColor = ContextCompat.getColor(this, R.color.black)
+
         val leftAxis = lineChart.axisLeft
         leftAxis.setDrawGridLines(true)
         leftAxis.gridColor = ContextCompat.getColor(this, R.color.black)
         leftAxis.gridLineWidth = 0.5f
         leftAxis.textColor = ContextCompat.getColor(this, R.color.black)
+
         lineChart.axisRight.isEnabled = false
         lineChart.legend.textColor = ContextCompat.getColor(this, R.color.black)
         lineChart.legend.textSize = 12f
-    }
-
-    private fun loadChartData(period: String) {
-        val entries = mutableMapOf<String, MutableList<Entry>>()
-        for (i in 1..8) entries["Valve $i"] = mutableListOf()
-
-        val dataPoints = when (period) {
-            "Last 24 hours" -> generateLast24HoursData(entries)
-            "Last 7 days" -> generateLast7DaysData(entries)
-            "Last 30 days" -> generateLast30DaysData(entries)
-            "Last 3 months" -> generateLast3MonthsData(entries)
-            "Last year" -> generateLastYearData(entries)
-            else -> generateLast24HoursData(entries)
-        }
-
-        updateChart(entries, dataPoints, period)
-    }
-
-    private fun generateLast24HoursData(entries: MutableMap<String, MutableList<Entry>>): Int {
-        val hours = 24
-        for (i in 0 until hours) for (valve in 1..8) entries["Valve $valve"]?.add(Entry(i.toFloat(), (0..5).random().toFloat()))
-        return hours
-    }
-
-    private fun generateLast7DaysData(entries: MutableMap<String, MutableList<Entry>>): Int {
-        val days = 7
-        for (i in 0 until days) for (valve in 1..8) entries["Valve $valve"]?.add(Entry(i.toFloat(), (5..50).random().toFloat()))
-        return days
-    }
-
-    private fun generateLast30DaysData(entries: MutableMap<String, MutableList<Entry>>): Int {
-        val days = 30
-        for (i in 0 until days) for (valve in 1..8) entries["Valve $valve"]?.add(Entry(i.toFloat(), (10..100).random().toFloat()))
-        return days
-    }
-
-    private fun generateLast3MonthsData(entries: MutableMap<String, MutableList<Entry>>): Int {
-        val months = 3
-        for (i in 0 until months) for (valve in 1..8) entries["Valve $valve"]?.add(Entry(i.toFloat(), (100..500).random().toFloat()))
-        return months
-    }
-
-    private fun generateLastYearData(entries: MutableMap<String, MutableList<Entry>>): Int {
-        val months = 12
-        for (i in 0 until months) for (valve in 1..8) entries["Valve $valve"]?.add(Entry(i.toFloat(), (500..2000).random().toFloat()))
-        return months
-    }
-
-    private fun updateChart(entries: MutableMap<String, MutableList<Entry>>, dataPoints: Int, period: String) {
-        val dataSets = mutableListOf<LineDataSet>()
-        entries.entries.forEachIndexed { index, (valveName, data) ->
-            val valveNumber = index + 1
-            if (selectedValves.contains(valveNumber)) {
-                val dataSet = LineDataSet(data, valveName).apply {
-                    color = valveColors[index % valveColors.size]
-                    setCircleColor(valveColors[index % valveColors.size])
-                    lineWidth = 3f
-                    circleRadius = 4f
-                    setDrawCircleHole(true)
-                    circleHoleColor = Color.WHITE
-                    circleHoleRadius = 2f
-                    valueTextSize = 0f
-                    setDrawValues(false)
-                    mode = LineDataSet.Mode.CUBIC_BEZIER
-                    cubicIntensity = 0.2f
-                    setDrawFilled(true)
-                    fillAlpha = 30
-                    fillColor = valveColors[index % valveColors.size]
-                }
-                dataSets.add(dataSet)
-            }
-        }
-
-        val lineChart = binding.activationsChart
-        if (dataSets.isEmpty()) {
-            lineChart.clear()
-            lineChart.setNoDataText("Veuillez sélectionner au moins une vanne")
-            lineChart.setNoDataTextColor(ContextCompat.getColor(this, R.color.black))
-            lineChart.invalidate()
-            return
-        }
-
-        lineChart.data = LineData(dataSets as List<LineDataSet>)
-        lineChart.xAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                val index = value.toInt()
-                return when (period) {
-                    "Last 24 hours" -> "${index}h"
-                    "Last 7 days", "Last 30 days" -> "Day ${index + 1}"
-                    "Last 3 months" -> "Month ${index + 1}"
-                    "Last year" -> getMonthName(index)
-                    else -> index.toString()
-                }
-            }
-        }
-        lineChart.invalidate()
-        lineChart.animateX(1000)
-    }
-
-    private fun getMonthName(index: Int): String {
-        val months = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-        return if (index in months.indices) months[index] else ""
     }
 
     private fun showCustomDateRangePicker() {
@@ -413,6 +377,4 @@ class StatisticsActivity : BaseActivity() {
     private fun exportToPdf() {
         Snackbar.make(binding.main, "Exporting statistics to PDF...", Snackbar.LENGTH_SHORT).show()
     }
-
-
 }

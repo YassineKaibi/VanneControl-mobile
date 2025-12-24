@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplicationv10.model.Device
 import com.example.myapplicationv10.model.DeviceStatsResponse
+import com.example.myapplicationv10.model.TelemetryEvent
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.repository.DeviceRepository
 import com.example.myapplicationv10.repository.TelemetryRepository
@@ -12,9 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-/**
- * StatisticsViewModel - ViewModel pour l'activité des statistiques
- */
 class StatisticsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val deviceRepository = DeviceRepository(application)
@@ -26,9 +24,9 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
     private val _statsState = MutableStateFlow<NetworkResult<DeviceStatsResponse>>(NetworkResult.Idle)
     val statsState: StateFlow<NetworkResult<DeviceStatsResponse>> = _statsState
 
-    /**
-     * Charger tous les appareils de l'utilisateur
-     */
+    private val _historyState = MutableStateFlow<NetworkResult<List<TelemetryEvent>>>(NetworkResult.Idle)
+    val historyState: StateFlow<NetworkResult<List<TelemetryEvent>>> = _historyState
+
     fun loadDevices() {
         viewModelScope.launch {
             _devicesState.value = NetworkResult.Loading
@@ -36,9 +34,6 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    /**
-     * Charger les statistiques pour un appareil spécifique
-     */
     fun loadDeviceStats(deviceId: String) {
         viewModelScope.launch {
             _statsState.value = NetworkResult.Loading
@@ -46,9 +41,22 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    /**
-     * Rafraîchir les données
-     */
+    fun loadHistory(
+        deviceId: String? = null,
+        pistonNumber: Int? = null,
+        action: String? = null,
+        startDate: String? = null,
+        endDate: String? = null,
+        limit: Int? = 5000
+    ) {
+        viewModelScope.launch {
+            _historyState.value = NetworkResult.Loading
+            _historyState.value = telemetryRepository.getTelemetry(
+                deviceId, pistonNumber, action, startDate, endDate, limit
+            )
+        }
+    }
+
     fun refresh() {
         loadDevices()
     }

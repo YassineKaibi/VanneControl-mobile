@@ -215,6 +215,11 @@ class ProfileActivity : BaseActivity() {
         val valveLimitManager = ValveLimitManager.getInstance(this)
         val valveLimit = valveLimitManager.getValveLimit()
         binding.numberOfValvesValue.text = "$valveLimit valves to manage"
+
+        // Sauvegarder pour StatisticsActivity
+        val sharedPref = getSharedPreferences("VanneControl", MODE_PRIVATE)
+        sharedPref.edit().putInt("totalValves", valveLimit).apply()
+
     }
 
     override fun onResume() {
