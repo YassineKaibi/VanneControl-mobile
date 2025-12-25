@@ -36,8 +36,8 @@ class TimingPlanActivity : BaseActivity() {
     }
 
     private fun setupVanneButtons() {
-        val sharedPreferences = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
-        val numberOfValves = sharedPreferences.getInt("numberOfValvesValue", 8)
+        val sharedPreferences = getSharedPreferences("VanneControl", Context.MODE_PRIVATE)
+        val numberOfValves = sharedPreferences.getInt("totalValves", 8)
 
         Log.d("TimingPlanActivity", "Number of valves: $numberOfValves")
 
