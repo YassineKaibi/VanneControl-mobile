@@ -1,5 +1,6 @@
 package com.example.myapplicationv10
 
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Bundle
@@ -17,6 +18,7 @@ import com.example.myapplicationv10.model.UpdateScheduleRequest
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -26,6 +28,7 @@ import java.util.*
  * - Schedule name input
  * - Valve selection
  * - Repeat type selection (once, everyday, weekdays, weekends, custom)
+ * - Date picker for "Once" option
  * - Timed ON toggle with time picker
  * - Timed OFF toggle with time picker
  */
@@ -49,6 +52,10 @@ class AddTimingActivity : BaseActivity() {
     private var offTimeHour: Int = 0
     private var offTimeMinute: Int = 0
 
+    // Date for "Once" option
+    private var selectedDate: Calendar = Calendar.getInstance()
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
     enum class RepeatType {
         ONCE, EVERYDAY, WEEKDAYS, WEEKENDS, CUSTOM
     }
@@ -63,6 +70,9 @@ class AddTimingActivity : BaseActivity() {
         deviceName = intent.getStringExtra("DEVICE_NAME")
         isEditMode = intent.getBooleanExtra("IS_EDIT_MODE", false)
         scheduleId = intent.getStringExtra("SCHEDULE_ID")
+
+        // Initialize selected date to tomorrow by default
+        selectedDate.add(Calendar.DAY_OF_MONTH, 1)
 
         setupViewModel()
         setupUI()
@@ -165,7 +175,7 @@ class AddTimingActivity : BaseActivity() {
                 showRepeatDialog()
             }
         }
-        
+
         binding.tvRepeatValue.setOnClickListener {
             showRepeatDialog()
         }
@@ -176,7 +186,10 @@ class AddTimingActivity : BaseActivity() {
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .setPositiveButton("OK") { _, _ ->
-                // Value already set by radio button listeners
+                // If "Once" is selected, show date picker
+                if (selectedRepeatType == RepeatType.ONCE) {
+                    showDatePickerForOnce()
+                }
             }
             .setNegativeButton("Cancel", null)
             .create()
@@ -249,9 +262,42 @@ class AddTimingActivity : BaseActivity() {
         dialog.show()
     }
 
+    /**
+     * Show date picker when "Once" is selected
+     */
+    private fun showDatePickerForOnce() {
+        val today = Calendar.getInstance()
+
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                selectedDate.set(Calendar.YEAR, year)
+                selectedDate.set(Calendar.MONTH, month)
+                selectedDate.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+                // Update the display to show the selected date
+                binding.tvRepeatValue.text = "Once (${dateFormat.format(selectedDate.time)})"
+            },
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH),
+            selectedDate.get(Calendar.DAY_OF_MONTH)
+        )
+
+        // Don't allow past dates
+        datePickerDialog.datePicker.minDate = today.timeInMillis
+        datePickerDialog.show()
+    }
+
     private fun getRepeatDisplayName(type: RepeatType): String {
         return when (type) {
-            RepeatType.ONCE -> "Once"
+            RepeatType.ONCE -> {
+                // Show date if already selected
+                if (selectedRepeatType == RepeatType.ONCE) {
+                    "Once (${dateFormat.format(selectedDate.time)})"
+                } else {
+                    "Once"
+                }
+            }
             RepeatType.EVERYDAY -> "Everyday"
             RepeatType.WEEKDAYS -> "Weekdays"
             RepeatType.WEEKENDS -> "Weekends"
@@ -292,6 +338,8 @@ class AddTimingActivity : BaseActivity() {
             val parts = cron.split(" ")
             val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
             val hour = parts.getOrNull(2)?.toIntOrNull() ?: 0
+            val dayOfMonth = parts.getOrNull(3) ?: "?"
+            val month = parts.getOrNull(4) ?: "*"
             val dayOfWeek = parts.getOrNull(5) ?: "*"
 
             // Set time based on action
@@ -311,8 +359,15 @@ class AddTimingActivity : BaseActivity() {
 
             // Parse repeat type
             selectedRepeatType = when {
-                dayOfWeek == "*" -> RepeatType.EVERYDAY
-                dayOfWeek == "?" -> RepeatType.ONCE
+                dayOfWeek == "*" && dayOfMonth == "?" -> RepeatType.EVERYDAY
+                dayOfWeek == "?" && dayOfMonth != "*" -> {
+                    // This is a "Once" schedule - parse the date
+                    val day = dayOfMonth.toIntOrNull() ?: 1
+                    val mon = month.toIntOrNull() ?: 1
+                    selectedDate.set(Calendar.DAY_OF_MONTH, day)
+                    selectedDate.set(Calendar.MONTH, mon - 1) // Calendar months are 0-based
+                    RepeatType.ONCE
+                }
                 dayOfWeek == "MON-FRI" || dayOfWeek == "2-6" -> RepeatType.WEEKDAYS
                 dayOfWeek == "SAT,SUN" || dayOfWeek == "1,7" -> RepeatType.WEEKENDS
                 else -> {
@@ -415,13 +470,30 @@ class AddTimingActivity : BaseActivity() {
             return
         }
 
+        // Validate "Once" date is in the future
+        if (selectedRepeatType == RepeatType.ONCE) {
+            val now = Calendar.getInstance()
+            if (timedOnEnabled) {
+                selectedDate.set(Calendar.HOUR_OF_DAY, onTimeHour)
+                selectedDate.set(Calendar.MINUTE, onTimeMinute)
+            } else {
+                selectedDate.set(Calendar.HOUR_OF_DAY, offTimeHour)
+                selectedDate.set(Calendar.MINUTE, offTimeMinute)
+            }
+
+            if (selectedDate.before(now)) {
+                Toast.makeText(this, "Please select a future date and time", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
         selectedValveNumber = binding.spinnerValve.selectedItemPosition + 1
 
         // Create schedules based on toggles
         // For now, we create one schedule per action (backend supports single action per schedule)
         if (timedOnEnabled) {
             val cronExpression = buildCronExpression(onTimeHour, onTimeMinute)
-            
+
             if (isEditMode && scheduleId != null) {
                 val request = UpdateScheduleRequest(
                     name = name,
@@ -463,26 +535,31 @@ class AddTimingActivity : BaseActivity() {
      * Quartz cron format: second minute hour dayOfMonth month dayOfWeek [year]
      */
     private fun buildCronExpression(hour: Int, minute: Int): String {
-        val dayOfWeek = when (selectedRepeatType) {
+        return when (selectedRepeatType) {
             RepeatType.ONCE -> {
-                // For one-time execution, use specific date
-                val calendar = Calendar.getInstance()
-                val day = calendar.get(Calendar.DAY_OF_MONTH)
-                val month = calendar.get(Calendar.MONTH) + 1
-                return "0 $minute $hour $day $month ?"
+                // Use the user-selected date
+                val day = selectedDate.get(Calendar.DAY_OF_MONTH)
+                val month = selectedDate.get(Calendar.MONTH) + 1 // Calendar months are 0-based
+                val year = selectedDate.get(Calendar.YEAR)
+                "0 $minute $hour $day $month ? $year"
             }
-            RepeatType.EVERYDAY -> "*"
-            RepeatType.WEEKDAYS -> "MON-FRI"
-            RepeatType.WEEKENDS -> "SAT,SUN"
+            RepeatType.EVERYDAY -> {
+                "0 $minute $hour ? * *"
+            }
+            RepeatType.WEEKDAYS -> {
+                "0 $minute $hour ? * MON-FRI"
+            }
+            RepeatType.WEEKENDS -> {
+                "0 $minute $hour ? * SAT,SUN"
+            }
             RepeatType.CUSTOM -> {
-                if (selectedCustomDays.isEmpty()) {
+                val days = if (selectedCustomDays.isEmpty()) {
                     "*" // Default to everyday if no days selected
                 } else {
                     selectedCustomDays.sorted().joinToString(",")
                 }
+                "0 $minute $hour ? * $days"
             }
         }
-
-        return "0 $minute $hour ? * $dayOfWeek"
     }
 }
