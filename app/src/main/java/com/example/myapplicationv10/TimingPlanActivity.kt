@@ -1,187 +1,218 @@
 package com.example.myapplicationv10
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
-import android.content.Context
-import android.content.res.ColorStateList
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.myapplicationv10.adapter.ScheduleAdapter
 import com.example.myapplicationv10.databinding.ActivityTimingPlanBinding
-import com.google.android.material.button.MaterialButton
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.myapplicationv10.model.ScheduleResponse
+import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.viewmodel.ScheduleViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.launch
 
+/**
+ * TimingPlanActivity - Main screen for managing scheduled valve operations
+ * 
+ * Displays list of existing schedules with ability to:
+ * - View all schedules
+ * - Toggle schedule enabled/disabled
+ * - Edit a schedule
+ * - Delete a schedule
+ * - Add new schedule
+ */
 class TimingPlanActivity : BaseActivity() {
 
     private lateinit var binding: ActivityTimingPlanBinding
+    private lateinit var viewModel: ScheduleViewModel
+    private lateinit var scheduleAdapter: ScheduleAdapter
 
-    private var selectedValveNumber: Int? = null
-    private var selectedAction: String? = null
-    private var selectedDateTime: Calendar? = null
-
-    private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    private var deviceId: String? = null
+    private var deviceName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTimingPlanBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupVanneButtons()
-        setupActionButtons()
-        setupDateTimePicker()
-        setupSaveButton()
+        // Get device info from intent
+        deviceId = intent.getStringExtra("DEVICE_ID")
+        deviceName = intent.getStringExtra("DEVICE_NAME")
+
+        setupViewModel()
+        setupRecyclerView()
+        setupButtons()
+        observeViewModel()
+
+        // Load schedules
+        viewModel.loadSchedules()
     }
 
-    private fun setupVanneButtons() {
-        val sharedPreferences = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
-        val numberOfValves = sharedPreferences.getInt("numberOfValvesValue", 8)
+    override fun onResume() {
+        super.onResume()
+        // Refresh schedules when returning from AddTimingActivity
+        viewModel.loadSchedules()
+    }
 
-        Log.d("TimingPlanActivity", "Number of valves: $numberOfValves")
+    private fun setupViewModel() {
+        viewModel = ViewModelProvider(
+            this,
+            ScheduleViewModel.Factory(applicationContext)
+        )[ScheduleViewModel::class.java]
+    }
 
-        val allVanneButtons = listOf(
-            binding.btnVanne1, binding.btnVanne2, binding.btnVanne3, binding.btnVanne4,
-            binding.btnVanne5, binding.btnVanne6, binding.btnVanne7, binding.btnVanne8
+    private fun setupRecyclerView() {
+        scheduleAdapter = ScheduleAdapter(
+            onToggle = { schedule, enabled ->
+                viewModel.toggleSchedule(schedule.id, enabled)
+            },
+            onEdit = { schedule ->
+                navigateToEditSchedule(schedule)
+            },
+            onDelete = { schedule ->
+                showDeleteConfirmation(schedule)
+            }
         )
 
-        val greenColor = ContextCompat.getColor(this, R.color.green)
-        val blackColor = ContextCompat.getColor(this, R.color.black)
-        val whiteColor = ContextCompat.getColor(this, R.color.white)
+        binding.schedulesRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@TimingPlanActivity)
+            adapter = scheduleAdapter
+        }
+    }
 
-        allVanneButtons.forEachIndexed { index, button ->
-            if (index < numberOfValves) {
-                button.visibility = View.VISIBLE
-                button.setOnClickListener {
-                    allVanneButtons.take(numberOfValves).forEach {
-                        it.setTextColor(blackColor)
-                        it.strokeColor = ColorStateList.valueOf(blackColor)
-                        it.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+    private fun setupButtons() {
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
+
+        binding.btnAdd.setOnClickListener {
+            navigateToAddSchedule()
+        }
+    }
+
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            viewModel.schedulesState.collect { result ->
+                when (result) {
+                    is NetworkResult.Idle -> {
+                        binding.progressBar.visibility = View.GONE
                     }
-
-                    button.setTextColor(whiteColor)
-                    button.strokeColor = ColorStateList.valueOf(greenColor)
-                    button.setBackgroundColor(greenColor)
-                    selectedValveNumber = index + 1
+                    is NetworkResult.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                        binding.emptyState.visibility = View.GONE
+                    }
+                    is NetworkResult.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        val schedules = result.data
+                        
+                        if (schedules.isEmpty()) {
+                            binding.emptyState.visibility = View.VISIBLE
+                            binding.schedulesRecyclerView.visibility = View.GONE
+                        } else {
+                            binding.emptyState.visibility = View.GONE
+                            binding.schedulesRecyclerView.visibility = View.VISIBLE
+                            
+                            // Filter by device if deviceId is provided
+                            val filteredSchedules = if (deviceId != null) {
+                                schedules.filter { it.deviceId == deviceId }
+                            } else {
+                                schedules
+                            }
+                            
+                            scheduleAdapter.submitList(filteredSchedules)
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        binding.emptyState.visibility = View.VISIBLE
+                        Toast.makeText(
+                            this@TimingPlanActivity,
+                            "Error: ${result.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-            } else {
-                button.visibility = View.GONE
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.deleteState.collect { result ->
+                when (result) {
+                    is NetworkResult.Success -> {
+                        Toast.makeText(
+                            this@TimingPlanActivity,
+                            "Schedule deleted",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        viewModel.resetDeleteState()
+                    }
+                    is NetworkResult.Error -> {
+                        Toast.makeText(
+                            this@TimingPlanActivity,
+                            "Failed to delete: ${result.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        viewModel.resetDeleteState()
+                    }
+                    else -> {}
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.updateState.collect { result ->
+                when (result) {
+                    is NetworkResult.Error -> {
+                        Toast.makeText(
+                            this@TimingPlanActivity,
+                            "Failed to update: ${result.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        viewModel.resetUpdateState()
+                        // Refresh to restore original state
+                        viewModel.loadSchedules()
+                    }
+                    else -> {}
+                }
             }
         }
     }
 
-    private fun setupActionButtons() {
-        val greenColor = ContextCompat.getColor(this, R.color.green)
-        val blackColor = ContextCompat.getColor(this, R.color.black)
-        val whiteColor = ContextCompat.getColor(this, R.color.white)
-
-        binding.btnActionOpen.setOnClickListener {
-            binding.btnActionOpen.setTextColor(whiteColor)
-            binding.btnActionOpen.strokeColor = ColorStateList.valueOf(greenColor)
-            binding.btnActionOpen.setBackgroundColor(greenColor)
-
-            binding.btnActionClose.setTextColor(blackColor)
-            binding.btnActionClose.strokeColor = ColorStateList.valueOf(blackColor)
-            binding.btnActionClose.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-
-            selectedAction = "OPEN"
+    private fun navigateToAddSchedule() {
+        val intent = Intent(this, AddTimingActivity::class.java).apply {
+            putExtra("DEVICE_ID", deviceId)
+            putExtra("DEVICE_NAME", deviceName)
         }
+        startActivity(intent)
+    }
 
-        binding.btnActionClose.setOnClickListener {
-            binding.btnActionClose.setTextColor(whiteColor)
-            binding.btnActionClose.strokeColor = ColorStateList.valueOf(greenColor)
-            binding.btnActionClose.setBackgroundColor(greenColor)
-
-            binding.btnActionOpen.setTextColor(blackColor)
-            binding.btnActionOpen.strokeColor = ColorStateList.valueOf(blackColor)
-            binding.btnActionOpen.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-
-            selectedAction = "CLOSE"
+    private fun navigateToEditSchedule(schedule: ScheduleResponse) {
+        val intent = Intent(this, AddTimingActivity::class.java).apply {
+            putExtra("DEVICE_ID", deviceId ?: schedule.deviceId)
+            putExtra("DEVICE_NAME", deviceName)
+            putExtra("SCHEDULE_ID", schedule.id)
+            putExtra("SCHEDULE_NAME", schedule.name)
+            putExtra("PISTON_NUMBER", schedule.pistonNumber)
+            putExtra("ACTION", schedule.action)
+            putExtra("CRON_EXPRESSION", schedule.cronExpression)
+            putExtra("ENABLED", schedule.enabled)
+            putExtra("IS_EDIT_MODE", true)
         }
+        startActivity(intent)
     }
 
-    private fun setupDateTimePicker() {
-        binding.etDateTime.setOnClickListener {
-            showDatePicker()
-        }
-    }
-
-    private fun showDatePicker() {
-        val calendar = Calendar.getInstance()
-
-        val datePickerDialog = DatePickerDialog(
-            this,
-            { _, year, month, dayOfMonth ->
-                calendar.set(Calendar.YEAR, year)
-                calendar.set(Calendar.MONTH, month)
-                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                showTimePicker(calendar)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-
-        datePickerDialog.datePicker.minDate = System.currentTimeMillis()
-        datePickerDialog.show()
-    }
-
-    private fun showTimePicker(calendar: Calendar) {
-        val timePickerDialog = TimePickerDialog(
-            this,
-            { _, hourOfDay, minute ->
-                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                calendar.set(Calendar.MINUTE, minute)
-                calendar.set(Calendar.SECOND, 0)
-
-                selectedDateTime = calendar
-                binding.etDateTime.setText(dateTimeFormat.format(calendar.time))
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        )
-
-        timePickerDialog.show()
-    }
-
-    private fun setupSaveButton() {
-        binding.btnSave.setOnClickListener {
-            if (validateInputs()) {
-                saveTiming()
+    private fun showDeleteConfirmation(schedule: ScheduleResponse) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Delete Schedule")
+            .setMessage("Are you sure you want to delete \"${schedule.name}\"?")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deleteSchedule(schedule.id)
             }
-        }
-    }
-
-    private fun validateInputs(): Boolean {
-        if (selectedValveNumber == null) {
-            Toast.makeText(this, "Veuillez sélectionner une vanne", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        if (selectedAction == null) {
-            Toast.makeText(this, "Veuillez sélectionner une action", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        if (selectedDateTime == null) {
-            Toast.makeText(this, "Veuillez sélectionner la date et l'heure", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
-        return true
-    }
-
-    private fun saveTiming() {
-        val message = """
-            Plan enregistré:
-            Vanne: $selectedValveNumber
-            Action: $selectedAction
-            Date/Heure: ${dateTimeFormat.format(selectedDateTime!!.time)}
-        """.trimIndent()
-
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        finish()
+            .show()
     }
 }

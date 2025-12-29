@@ -92,9 +92,16 @@ class DashboardActivity : BaseActivity() {
         }
 
         binding.timingPlanCard.setOnClickListener {
-            // Nouvelle action pour Timing Plan
-            val intent = Intent(this, TimingPlanActivity::class.java)
-            startActivity(intent)
+            val currentState = viewModel.devicesState.value
+            if (currentState is NetworkResult.Success && currentState.data.isNotEmpty()) {
+                val firstDevice = currentState.data.first()
+                val intent = Intent(this, TimingPlanActivity::class.java)
+                intent.putExtra("DEVICE_ID", firstDevice.id)
+                intent.putExtra("DEVICE_NAME", firstDevice.name)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Aucun appareil disponible", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.historyCard.setOnClickListener {
