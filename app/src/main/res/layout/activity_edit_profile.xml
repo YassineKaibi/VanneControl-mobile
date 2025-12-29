@@ -282,7 +282,7 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
                         app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_launcher_foreground"
+                        app:startIconDrawable="@drawable/ic_email"
                         app:startIconTint="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -305,7 +305,7 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
                         app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_launcher_foreground"
+                        app:startIconDrawable="@drawable/ic_phone"
                         app:startIconTint="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -328,7 +328,7 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
                         app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_launcher_foreground"
+                        app:startIconDrawable="@drawable/ic_location"
                         app:startIconTint="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText

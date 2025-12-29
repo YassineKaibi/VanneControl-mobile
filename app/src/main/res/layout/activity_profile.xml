@@ -186,7 +186,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:padding="4dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_close"
                         android:contentDescription="Close"
                         android:clickable="true"
                         android:focusable="true"
