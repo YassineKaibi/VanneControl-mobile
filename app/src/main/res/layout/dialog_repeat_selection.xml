@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Repeat Type"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <RadioGroup
+        android:id="@+id/radioGroupRepeat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/radioOnce"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Once"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:buttonTint="@color/green"/>
+
+        <RadioButton
+            android:id="@+id/radioEveryday"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Everyday"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:buttonTint="@color/green"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/radioWeekdays"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Weekdays (Mon-Fri)"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:buttonTint="@color/green"/>
+
+        <RadioButton
+            android:id="@+id/radioWeekends"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Weekends (Sat-Sun)"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:buttonTint="@color/green"/>
+
+        <RadioButton
+            android:id="@+id/radioCustom"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Custom days..."
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:buttonTint="@color/green"/>
+
+    </RadioGroup>
+
+    <!-- Custom Days Selection (shown when Custom is selected) -->
+    <LinearLayout
+        android:id="@+id/layoutCustomDays"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="16dp">
+
+        <CheckBox
+            android:id="@+id/cbMon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="M"
+            android:buttonTint="@color/green"/>
+
+        <CheckBox
+            android:id="@+id/cbTue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="T"
+            android:buttonTint="@color/green"/>
+
+        <CheckBox
+            android:id="@+id/cbWed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="W"
+            android:buttonTint="@color/green"/>
+
+        <CheckBox
+            android:id="@+id/cbThu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="T"
+            android:buttonTint="@color/green"/>
+
+        <CheckBox
+            android:id="@+id/cbFri"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="F"
+            android:buttonTint="@color/green"/>
+
+        <CheckBox
+            android:id="@+id/cbSat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="S"
+            android:buttonTint="@color/green"/>
+
+        <CheckBox
+            android:id="@+id/cbSun"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="S"
+            android:buttonTint="@color/green"/>
+
+    </LinearLayout>
+
+</LinearLayout>
