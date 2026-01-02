@@ -49,7 +49,7 @@
             android:id="@+id/saveButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save"
+            android:text="@string/save"
             android:textStyle="bold"
             android:textSize="16sp"
             android:textColor="@color/green"
@@ -110,9 +110,9 @@
                                 android:id="@+id/profilePicture"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:src="@drawable/ic_launcher_foreground"
+                                android:src="@drawable/ic_avatar_placeholder"
                                 android:scaleType="centerCrop"
-                                android:contentDescription="Profile Picture" />
+                                android:contentDescription="@string/content_desc_profile_image" />
 
                         </androidx.cardview.widget.CardView>
 
@@ -135,9 +135,8 @@
                                 android:layout_width="18dp"
                                 android:layout_height="18dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_launcher_foreground"
-                                android:contentDescription="Change Photo"
-                                app:tint="@color/white" />
+                                android:src="@drawable/ic_camera"
+                                android:contentDescription="Change Photo" />
 
                         </androidx.cardview.widget.CardView>
 
@@ -193,7 +192,6 @@
                             android:id="@+id/firstNameEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Yassine"
                             android:inputType="textPersonName"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
@@ -214,7 +212,6 @@
                             android:id="@+id/lastNameEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Channa"
                             android:inputType="textPersonName"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
@@ -229,18 +226,15 @@
                         android:hint="Date of Birth"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
-                        app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_calendar"
-                        app:startIconTint="@color/green">
+                        app:hintTextColor="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/dateOfBirthEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="15/03/1995"
+                            android:inputType="none"
                             android:focusable="false"
                             android:clickable="true"
-                            android:inputType="none"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
 
@@ -274,24 +268,22 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Email -->
+                    <!-- Email (Read Only) -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Email"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        app:boxStrokeColor="@color/green"
-                        app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_email"
-                        app:startIconTint="@color/green">
+                        app:boxStrokeColor="@color/gray_disabled"
+                        app:hintTextColor="@color/gray_disabled">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/emailEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="admin@vannecontrol.com"
-                            android:inputType="textEmailAddress"
-                            android:textColor="@color/black"
+                            android:inputType="none"
+                            android:enabled="false"
+                            android:textColor="@color/gray_disabled"
                             android:textSize="16sp" />
 
                     </com.google.android.material.textfield.TextInputLayout>
@@ -304,15 +296,12 @@
                         android:hint="Phone Number"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
-                        app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_phone"
-                        app:startIconTint="@color/green">
+                        app:hintTextColor="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/phoneEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="+216 XX XXX XXX"
                             android:inputType="phone"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
@@ -327,15 +316,12 @@
                         android:hint="Location"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
-                        app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_location"
-                        app:startIconTint="@color/green">
+                        app:hintTextColor="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/locationEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Houmt Souk, Medenine, Tunisia"
                             android:inputType="textPostalAddress"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
@@ -346,11 +332,11 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- SYSTEM INFORMATION SECTION -->
+            <!-- VALVE SETTINGS SECTION -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="System Information"
+                android:text="Valve Settings"
                 android:textColor="@color/black"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -374,52 +360,31 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Number of Controlled Valves"
+                        android:hint="Number of Valves (1-8)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:boxStrokeColor="@color/green"
-                        app:hintTextColor="@color/green"
-                        app:startIconDrawable="@drawable/ic_valve"
-                        app:startIconTint="@color/green">
+                        app:hintTextColor="@color/green">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/numberOfValvesEdit"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="8"
                             android:inputType="number"
-                            android:textColor="@color/green"
-                            android:textStyle="bold"
+                            android:maxLength="1"
+                            android:textColor="@color/black"
                             android:textSize="16sp" />
 
                     </com.google.android.material.textfield.TextInputLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Specify the number of valves you want to control"
-                        android:textColor="#999999"
-                        android:textSize="12sp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginStart="4dp" />
 
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
 
-            <!-- SAVE BUTTON -->
-            <!--
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/saveChangesButton"
+            <!-- Spacer for scroll -->
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="Save Changes"
-                android:textColor="@color/text_color_selector"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:background="@drawable/button_selector"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="20dp" />
-            -->
+                android:layout_height="40dp" />
+
         </LinearLayout>
 
     </ScrollView>

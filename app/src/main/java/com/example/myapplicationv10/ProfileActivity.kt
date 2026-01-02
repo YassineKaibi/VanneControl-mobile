@@ -6,22 +6,34 @@ import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import com.example.myapplicationv10.utils.ValveLimitManager
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.example.myapplicationv10.databinding.ActivityProfileBinding
 import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.utils.ValveLimitManager
 import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
+/**
+ * ProfileActivity - Écran de profil utilisateur avec affichage d'avatar
+ *
+ * Fonctionnalités:
+ * - Affichage des informations du profil
+ * - Chargement de l'avatar avec Coil
+ * - Navigation vers l'édition
+ * - Déconnexion
+ */
 class ProfileActivity : BaseActivity() {
-
 
     private lateinit var binding: ActivityProfileBinding
     private lateinit var editProfileLauncher: ActivityResultLauncher<Intent>
     private lateinit var viewModel: ProfileViewModel
 
+    // Store current user data for passing to edit screen
+    private var currentAvatarUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,10 +41,9 @@ class ProfileActivity : BaseActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize ViewModel
         viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
 
-        // 1️⃣ Initialiser le launcher pour EditProfileActivity
+        // Initialiser le launcher pour EditProfileActivity
         editProfileLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -45,89 +56,83 @@ class ProfileActivity : BaseActivity() {
         setupBackButton()
         setupTabNavigation()
         setupLogout()
+        setupEditButton()
         observeProfileState()
         loadValveLimit()
 
         // Load user profile from backend
         viewModel.loadUserProfile()
-
-        // 2️⃣ Lancer EditProfileActivity avec le launcher quand on clique sur editButton
-        binding.editButton.setOnClickListener {
-            val intent = Intent(this, EditProfileActivity::class.java)
-
-            // Passer les données actuelles
-            intent.putExtra("firstName", binding.firstNameValue.text.toString())
-            intent.putExtra("lastName", binding.lastNameValue.text.toString())
-            intent.putExtra("dateOfBirth", binding.dateOfBirthValue.text.toString())
-            intent.putExtra("email", binding.emailValue.text.toString())
-            intent.putExtra("phoneNumber", binding.phoneNumberValue.text.toString())
-            intent.putExtra("location", binding.locationValue.text.toString())
-            intent.putExtra("numberOfValves", binding.numberOfValvesValue.text.toString().toIntOrNull() ?: 0)
-
-            editProfileLauncher.launch(intent)
-        }
     }
-
 
     private fun setupBackButton() {
         binding.backButton.setOnClickListener { finish() }
     }
 
     private fun setupTabNavigation() {
-        binding.personalInfoTab.setOnClickListener { showPersonalInfo() }
-        binding.teamsTab.setOnClickListener { showSystemSettings() }
+        binding.accountTab.setOnClickListener {
+            binding.accountTab.setBackgroundResource(R.drawable.tab_selected_background)
+            binding.accountTab.setTextColor(getColor(R.color.white))
+            binding.settingsTab.setBackgroundResource(android.R.color.transparent)
+            binding.settingsTab.setTextColor(getColor(R.color.black))
+        }
 
-        // Afficher les informations personnelles par défaut
-        showPersonalInfo()
+        binding.settingsTab.setOnClickListener {
+            binding.settingsTab.setBackgroundResource(R.drawable.tab_selected_background)
+            binding.settingsTab.setTextColor(getColor(R.color.white))
+            binding.accountTab.setBackgroundResource(android.R.color.transparent)
+            binding.accountTab.setTextColor(getColor(R.color.black))
+            Snackbar.make(binding.root, "Settings coming soon", Snackbar.LENGTH_SHORT).show()
+        }
     }
 
-    private fun showPersonalInfo() {
-        binding.personalInfoSection.visibility = View.VISIBLE
-        binding.systemSection.visibility = View.GONE
+    private fun setupEditButton() {
+        binding.editButton.setOnClickListener {
+            val intent = Intent(this, EditProfileActivity::class.java)
 
-        binding.personalInfoTab.setTextColor(resources.getColor(R.color.black, null))
-        binding.personalInfoTab.setBackgroundColor(resources.getColor(R.color.white, null))
-        binding.personalInfoTab.setTypeface(null, android.graphics.Typeface.BOLD)
+            // Pass current data to edit screen
+            intent.putExtra("firstName", binding.firstNameValue.text.toString())
+            intent.putExtra("lastName", binding.lastNameValue.text.toString())
+            intent.putExtra("dateOfBirth", binding.dateOfBirthValue.text.toString())
+            intent.putExtra("email", binding.emailValue.text.toString())
+            intent.putExtra("phoneNumber", binding.phoneNumberValue.text.toString())
+            intent.putExtra("location", binding.locationValue.text.toString())
+            intent.putExtra("numberOfValves", binding.numberOfValvesValue.text.toString().toIntOrNull() ?: 8)
+            intent.putExtra("avatarUrl", currentAvatarUrl)  // Pass avatar URL
 
-        binding.teamsTab.setTextColor(resources.getColor(android.R.color.darker_gray, null))
-        binding.teamsTab.setBackgroundColor(resources.getColor(android.R.color.background_light, null))
-        binding.teamsTab.setTypeface(null, android.graphics.Typeface.NORMAL)
-    }
-
-    private fun showSystemSettings() {
-        binding.personalInfoSection.visibility = View.GONE
-        binding.systemSection.visibility = View.VISIBLE
-
-        binding.teamsTab.setTextColor(resources.getColor(R.color.black, null))
-        binding.teamsTab.setBackgroundColor(resources.getColor(R.color.white, null))
-        binding.teamsTab.setTypeface(null, android.graphics.Typeface.BOLD)
-
-        binding.personalInfoTab.setTextColor(resources.getColor(android.R.color.darker_gray, null))
-        binding.personalInfoTab.setBackgroundColor(resources.getColor(android.R.color.background_light, null))
-        binding.personalInfoTab.setTypeface(null, android.graphics.Typeface.NORMAL)
+            editProfileLauncher.launch(intent)
+        }
     }
 
     private fun setupLogout() {
-        binding.logoutButton.setOnClickListener { showLogoutConfirmation() }
+        binding.logoutButton.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Logout") { _, _ -> performLogout() }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
     }
 
-    private fun showLogoutConfirmation() {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.logout))
-            .setMessage(getString(R.string.logout_confirm))
-            .setPositiveButton(getString(R.string.yes)) { _, _ -> logout() }
-            .setNegativeButton(getString(R.string.no), null)
-            .show()
-    }
+    private fun performLogout() {
+        // Clear auth tokens
+        com.example.myapplicationv10.utils.TokenManager.getInstance(this).logout()
 
-    private fun logout() {
+        // Clear other preferences
         val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
         prefs.edit().clear().apply()
 
+        // Navigate to login
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun loadValveLimit() {
+        val valveLimitManager = ValveLimitManager.getInstance(this)
+        val limit = valveLimitManager.getValveLimit()
+        binding.numberOfValvesValue.text = limit.toString()
     }
 
     private fun observeProfileState() {
@@ -135,95 +140,88 @@ class ProfileActivity : BaseActivity() {
             viewModel.profileState.collect { result ->
                 when (result) {
                     is NetworkResult.Idle -> {
-                        // Initial state
                         binding.loadingIndicator.visibility = View.GONE
                     }
 
                     is NetworkResult.Loading -> {
-                        // Show loading indicator
                         binding.loadingIndicator.visibility = View.VISIBLE
                     }
 
                     is NetworkResult.Success -> {
-                        // Hide loading indicator
                         binding.loadingIndicator.visibility = View.GONE
 
-                        // Update UI with real backend data
                         val user = result.data
+
+                        // Store avatar URL for edit screen
+                        currentAvatarUrl = user.avatarUrl
+
+                        // Update text fields
                         binding.firstNameValue.text = user.firstName ?: "N/A"
                         binding.lastNameValue.text = user.lastName ?: "N/A"
                         binding.emailValue.text = user.email
                         binding.phoneNumberValue.text = user.phoneNumber ?: "N/A"
                         binding.locationValue.text = user.location ?: "N/A"
-                        binding.dateOfBirthValue.text = user.dateOfBirth ?: "N/A"
+                        binding.dateOfBirthValue.text = formatDateForDisplay(user.dateOfBirth)
 
                         // Update header with full name
                         val fullName = "${user.firstName ?: ""} ${user.lastName ?: ""}".trim()
                         binding.userFullName.text = fullName.ifEmpty { "User" }
                         binding.userEmailHeader.text = user.email
 
-                        // Save to SharedPreferences as cache
-                        val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
-                        prefs.edit().apply {
-                            putString("user_first_name", user.firstName)
-                            putString("user_last_name", user.lastName)
-                            putString("user_email", user.email)
-                            putString("user_phone", user.phoneNumber)
-                            putString("user_location", user.location)
-                            putString("user_date_of_birth", user.dateOfBirth)
-                            apply()
-                        }
+                        // Load avatar with Coil
+                        loadAvatar(user.avatarUrl)
+
+                        // Update valve limit from preferences if stored
+                        val valveLimitManager = ValveLimitManager.getInstance(this@ProfileActivity)
+                        val currentLimit = valveLimitManager.getValveLimit()
+                        binding.numberOfValvesValue.text = currentLimit.toString()
                     }
 
                     is NetworkResult.Error -> {
-                        // Hide loading indicator
                         binding.loadingIndicator.visibility = View.GONE
-
-                        // Show error message
                         Snackbar.make(
                             binding.root,
                             "Failed to load profile: ${result.message}",
                             Snackbar.LENGTH_LONG
-                        ).show()
-
-                        // Load cached data from SharedPreferences as fallback
-                        loadCachedData()
+                        ).setAction("Retry") {
+                            viewModel.loadUserProfile()
+                        }.show()
                     }
                 }
             }
         }
     }
 
-    private fun loadCachedData() {
-        val prefs = getSharedPreferences("app_preferences", MODE_PRIVATE)
-
-        binding.firstNameValue.text = prefs.getString("user_first_name", "N/A") ?: "N/A"
-        binding.lastNameValue.text = prefs.getString("user_last_name", "N/A") ?: "N/A"
-        binding.emailValue.text = prefs.getString("user_email", "N/A") ?: "N/A"
-        binding.phoneNumberValue.text = prefs.getString("user_phone", "N/A") ?: "N/A"
-        binding.locationValue.text = prefs.getString("user_location", "N/A") ?: "N/A"
-        binding.dateOfBirthValue.text = prefs.getString("user_date_of_birth", "N/A") ?: "N/A"
-
-        val fullName = "${prefs.getString("user_first_name", "")} ${prefs.getString("user_last_name", "")}".trim()
-        binding.userFullName.text = fullName.ifEmpty { "User" }
-        binding.userEmailHeader.text = prefs.getString("user_email", "N/A") ?: "N/A"
+    /**
+     * Load avatar image using Coil
+     */
+    private fun loadAvatar(url: String?) {
+        binding.profilePicture.load(url) {
+            crossfade(true)
+            placeholder(R.drawable.ic_avatar_placeholder)
+            error(R.drawable.ic_avatar_placeholder)
+            transformations(CircleCropTransformation())
+        }
     }
 
-    private fun loadValveLimit() {
-        val valveLimitManager = ValveLimitManager.getInstance(this)
-        val valveLimit = valveLimitManager.getValveLimit()
-        binding.numberOfValvesValue.text = "$valveLimit valves to manage"
+    /**
+     * Format date from API format (yyyy-MM-dd) to display format (dd/MM/yyyy)
+     */
+    private fun formatDateForDisplay(date: String?): String {
+        if (date.isNullOrEmpty()) return "N/A"
 
-        // Sauvegarder pour StatisticsActivity
-        val sharedPref = getSharedPreferences("VanneControl", MODE_PRIVATE)
-        sharedPref.edit().putInt("totalValves", valveLimit).apply()
-
+        return try {
+            val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val outputFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+            val parsedDate = inputFormat.parse(date)
+            outputFormat.format(parsedDate!!)
+        } catch (e: Exception) {
+            date
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        // Reload valve limit when returning from EditProfileActivity
         loadValveLimit()
     }
-
 }

@@ -1,6 +1,7 @@
 package com.example.myapplicationv10.network
 
 import com.example.myapplicationv10.model.*
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -67,6 +68,32 @@ interface ApiService {
     ): Response<User>
 
     // =====================
+    // AVATAR
+    // =====================
+
+    /**
+     * POST /user/avatar
+     * Upload un nouvel avatar (multipart/form-data)
+     * Requires: Authorization header avec JWT token
+     *
+     * @param avatar Le fichier image (max 5MB, formats: JPG, PNG, WebP)
+     * @return AvatarResponse avec l'URL du nouvel avatar
+     */
+    @Multipart
+    @POST("user/avatar")
+    suspend fun uploadAvatar(
+        @Part avatar: MultipartBody.Part
+    ): Response<AvatarResponse>
+
+    /**
+     * DELETE /user/avatar
+     * Supprimer l'avatar actuel
+     * Requires: Authorization header avec JWT token
+     */
+    @DELETE("user/avatar")
+    suspend fun deleteAvatar(): Response<AvatarResponse>
+
+    // =====================
     // DEVICES
     // =====================
 
@@ -80,28 +107,32 @@ interface ApiService {
 
     /**
      * GET /devices/{deviceId}
-     * Récupérer les détails d'un appareil spécifique
+     * Récupérer un appareil spécifique par son ID
      * Requires: Authorization header avec JWT token
-     *
-     * @param deviceId L'ID unique de l'appareil
      */
     @GET("devices/{deviceId}")
     suspend fun getDevice(
         @Path("deviceId") deviceId: String
     ): Response<DeviceResponse>
 
+    /**
+     * GET /devices/{deviceId}/stats
+     * Récupérer les statistiques d'un appareil
+     * Requires: Authorization header avec JWT token
+     */
+    @GET("devices/{deviceId}/stats")
+    suspend fun getDeviceStats(
+        @Path("deviceId") deviceId: String
+    ): Response<DeviceStatsResponse>
+
     // =====================
-    // PISTON CONTROL
+    // PISTONS (VALVES)
     // =====================
 
     /**
      * POST /devices/{deviceId}/pistons/{pistonNumber}
-     * Contrôler un piston spécifique (activer/désactiver)
+     * Contrôler un piston (activer/désactiver)
      * Requires: Authorization header avec JWT token
-     *
-     * @param deviceId L'ID unique de l'appareil
-     * @param pistonNumber Le numéro du piston (1-8)
-     * @param request L'action à effectuer (activate/deactivate)
      */
     @POST("devices/{deviceId}/pistons/{pistonNumber}")
     suspend fun controlPiston(
@@ -111,12 +142,38 @@ interface ApiService {
     ): Response<PistonControlResponse>
 
     // =====================
+    // TELEMETRY / HISTORY
+    // =====================
+
+    /**
+     * GET /telemetry
+     * Récupérer l'historique des événements
+     * Requires: Authorization header avec JWT token
+     *
+     * @param deviceId Filtrer par appareil (optionnel)
+     * @param pistonNumber Filtrer par numéro de piston (optionnel)
+     * @param action Filtrer par action: "activated" ou "deactivated" (optionnel)
+     * @param startDate Date de début au format ISO (optionnel)
+     * @param endDate Date de fin au format ISO (optionnel)
+     * @param limit Nombre maximum de résultats (optionnel)
+     */
+    @GET("telemetry")
+    suspend fun getTelemetry(
+        @Query("deviceId") deviceId: String? = null,
+        @Query("pistonNumber") pistonNumber: Int? = null,
+        @Query("action") action: String? = null,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null,
+        @Query("limit") limit: Int? = null
+    ): Response<TelemetryListResponse>
+
+    // =====================
     // SCHEDULES
     // =====================
 
     /**
      * POST /schedules
-     * Créer un nouveau planning automatisé
+     * Créer un nouveau planning
      * Requires: Authorization header avec JWT token
      */
     @POST("schedules")
@@ -133,77 +190,35 @@ interface ApiService {
     suspend fun getSchedules(): Response<SchedulesListResponse>
 
     /**
-     * GET /schedules/{id}
-     * Récupérer un planning spécifique par ID
+     * GET /schedules/{scheduleId}
+     * Récupérer un planning spécifique
      * Requires: Authorization header avec JWT token
      */
-    @GET("schedules/{id}")
+    @GET("schedules/{scheduleId}")
     suspend fun getSchedule(
-        @Path("id") scheduleId: String
+        @Path("scheduleId") scheduleId: String
     ): Response<ScheduleResponse>
 
     /**
-     * PATCH /schedules/{id}
-     * Mettre à jour un planning existant (mise à jour partielle)
+     * PUT /schedules/{scheduleId}
+     * Mettre à jour un planning existant
      * Requires: Authorization header avec JWT token
      */
-    @PATCH("schedules/{id}")
+    @PUT("schedules/{scheduleId}")
     suspend fun updateSchedule(
-        @Path("id") scheduleId: String,
+        @Path("scheduleId") scheduleId: String,
         @Body request: UpdateScheduleRequest
     ): Response<ScheduleResponse>
 
     /**
-     * DELETE /schedules/{id}
+     * DELETE /schedules/{scheduleId}
      * Supprimer un planning
      * Requires: Authorization header avec JWT token
      */
-    @DELETE("schedules/{id}")
+    @DELETE("schedules/{scheduleId}")
     suspend fun deleteSchedule(
-        @Path("id") scheduleId: String
+        @Path("scheduleId") scheduleId: String
     ): Response<DeleteScheduleResponse>
-
-    // =====================
-    // STATISTICS
-    // =====================
-
-    /**
-     * GET /devices/{deviceId}/stats
-     * Récupérer les statistiques d'un appareil
-     * Requires: Authorization header avec JWT token
-     *
-     * @param deviceId L'ID unique de l'appareil
-     */
-    @GET("devices/{deviceId}/stats")
-    suspend fun getDeviceStats(
-        @Path("deviceId") deviceId: String
-    ): Response<DeviceStatsResponse>
-
-    // =====================
-    // TELEMETRY / HISTORY
-    // =====================
-
-    /**
-     * GET /telemetry
-     * Récupérer l'historique des événements (télémétrie)
-     * Requires: Authorization header avec JWT token
-     *
-     * @param deviceId Filtrer par appareil (optionnel)
-     * @param pistonNumber Filtrer par numéro de piston (optionnel)
-     * @param action Filtrer par action: "activated" ou "deactivated" (optionnel)
-     * @param startDate Date de début au format ISO (optionnel)
-     * @param endDate Date de fin au format ISO (optionnel)
-     * @param limit Nombre maximum de résultats (défaut: 100)
-     */
-    @GET("telemetry")
-    suspend fun getTelemetry(
-        @Query("deviceId") deviceId: String? = null,
-        @Query("pistonNumber") pistonNumber: Int? = null,
-        @Query("action") action: String? = null,
-        @Query("startDate") startDate: String? = null,
-        @Query("endDate") endDate: String? = null,
-        @Query("limit") limit: Int? = null
-    ): Response<TelemetryListResponse>
 
     // =====================
     // HEALTH CHECK
@@ -211,8 +226,7 @@ interface ApiService {
 
     /**
      * GET /health
-     * Vérifier l'état de santé du backend
-     * No authentication required
+     * Vérifier l'état du serveur
      */
     @GET("health")
     suspend fun healthCheck(): Response<HealthResponse>
