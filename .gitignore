@@ -16,6 +16,7 @@ local.properties
 
 # Claude Code configuration
 .claude/
+CLAUDE.md
 
 # Docker installation script
 install-docker.sh

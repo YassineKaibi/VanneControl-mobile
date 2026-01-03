@@ -12,6 +12,7 @@ import coil.load
 import coil.transform.CircleCropTransformation
 import com.example.myapplicationv10.databinding.ActivityProfileBinding
 import com.example.myapplicationv10.network.NetworkResult
+import com.example.myapplicationv10.utils.Constants
 import com.example.myapplicationv10.utils.ValveLimitManager
 import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
@@ -152,8 +153,8 @@ class ProfileActivity : BaseActivity() {
 
                         val user = result.data
 
-                        // Store avatar URL for edit screen
-                        currentAvatarUrl = user.avatarUrl
+                        // Store avatar URL for edit screen (fix localhost URLs)
+                        currentAvatarUrl = Constants.fixAvatarUrl(user.avatarUrl)
 
                         // Update text fields
                         binding.firstNameValue.text = user.firstName ?: "N/A"
@@ -168,8 +169,8 @@ class ProfileActivity : BaseActivity() {
                         binding.userFullName.text = fullName.ifEmpty { "User" }
                         binding.userEmailHeader.text = user.email
 
-                        // Load avatar with Coil
-                        loadAvatar(user.avatarUrl)
+                        // Load avatar with Coil (already fixed above)
+                        loadAvatar(currentAvatarUrl)
 
                         // Update valve limit from preferences if stored
                         val valveLimitManager = ValveLimitManager.getInstance(this@ProfileActivity)

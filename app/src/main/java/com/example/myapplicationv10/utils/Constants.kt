@@ -115,4 +115,33 @@ object Constants {
      * Activer les logs réseau (désactiver en production)
      */
     const val ENABLE_NETWORK_LOGS = true
+
+    // =====================
+    // AVATAR CONFIGURATION
+    // =====================
+
+    /**
+     * Base domain for the backend (without /api suffix)
+     */
+    private const val BASE_DOMAIN = "https://vannecontrol.swedencentral.cloudapp.azure.com"
+
+    /**
+     * Fix avatar URLs returned by backend that use localhost
+     *
+     * Backend sometimes returns: http://localhost:8080/avatars/...
+     * This fixes it to: https://vannecontrol.swedencentral.cloudapp.azure.com/avatars/...
+     *
+     * @param url Avatar URL from backend (may be null or contain localhost)
+     * @return Fixed URL that's accessible from mobile devices, or null
+     */
+    fun fixAvatarUrl(url: String?): String? {
+        if (url.isNullOrEmpty()) return null
+
+        // Replace localhost URLs with production domain
+        return url
+            .replace("http://localhost:8080", BASE_DOMAIN)
+            .replace("https://localhost:8080", BASE_DOMAIN)
+            .replace("http://127.0.0.1:8080", BASE_DOMAIN)
+            .replace("https://127.0.0.1:8080", BASE_DOMAIN)
+    }
 }

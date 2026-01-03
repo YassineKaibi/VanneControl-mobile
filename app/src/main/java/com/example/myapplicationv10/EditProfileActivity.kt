@@ -18,6 +18,7 @@ import coil.transform.CircleCropTransformation
 import com.example.myapplicationv10.databinding.ActivityEditProfileBinding
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.repository.AvatarRepository
+import com.example.myapplicationv10.utils.Constants
 import com.example.myapplicationv10.utils.ValveLimitManager
 import com.example.myapplicationv10.viewmodel.ProfileViewModel
 import com.google.android.material.snackbar.Snackbar
@@ -166,8 +167,8 @@ class EditProfileActivity : BaseActivity() {
         }
         binding.numberOfValvesEdit.setText(currentLimit.toString())
 
-        // Load current avatar URL
-        currentAvatarUrl = intent.getStringExtra("avatarUrl")
+        // Load current avatar URL (fix localhost URLs)
+        currentAvatarUrl = Constants.fixAvatarUrl(intent.getStringExtra("avatarUrl"))
         loadAvatar(currentAvatarUrl)
     }
 
@@ -306,7 +307,8 @@ class EditProfileActivity : BaseActivity() {
             when (val result = avatarRepository.uploadAvatar(uri)) {
                 is NetworkResult.Success -> {
                     hideLoading()
-                    currentAvatarUrl = result.data.avatarUrl
+                    // Fix localhost URLs from backend
+                    currentAvatarUrl = Constants.fixAvatarUrl(result.data.avatarUrl)
 
                     Snackbar.make(
                         binding.root,
@@ -314,7 +316,7 @@ class EditProfileActivity : BaseActivity() {
                         Snackbar.LENGTH_SHORT
                     ).show()
 
-                    // Reload avatar from server URL
+                    // Reload avatar from server URL (already fixed above)
                     loadAvatar(currentAvatarUrl)
                 }
                 is NetworkResult.Error -> {
