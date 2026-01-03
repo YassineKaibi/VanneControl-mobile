@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -148,7 +149,7 @@ class HistoryActivity : BaseActivity() {
     private fun setupFilterPanel() {
         binding.filterButton.setOnClickListener {
             binding.filterPanel.visibility =
-                if (binding.filterPanel.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                if (binding.filterPanel.isVisible) View.GONE else View.VISIBLE
         }
 
         setupValveChips()

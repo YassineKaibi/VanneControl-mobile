@@ -1,4 +1,4 @@
-package com.example.myapplicationv10
+package com.example.myapplicationv10.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,8 +7,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplicationv10.R
+import com.example.myapplicationv10.model.Valve
 
-class ActiveValvesAdapter(private var valves: List<DashboardActivity.Valve>) :
+class ActiveValvesAdapter(private var valves: List<Valve>) :
     RecyclerView.Adapter<ActiveValvesAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -33,23 +35,15 @@ class ActiveValvesAdapter(private var valves: List<DashboardActivity.Valve>) :
         holder.valveStatus.text = "Active"
         holder.valveTime.text = valve.lastChanged
 
-        // Set green background for active valves
         holder.valveIndicator.setCardBackgroundColor(context.getColor(R.color.green))
-
-        // Set water icon
         holder.valveStatusIcon.setImageResource(R.drawable.ic_water)
         holder.valveStatusIcon.clearColorFilter()
-
-        // Set green color for active status text
         holder.valveStatus.setTextColor(context.getColor(R.color.green))
     }
 
     override fun getItemCount() = valves.size
 
-    /**
-     * Update the list of valves and refresh the adapter
-     */
-    fun updateValves(newValves: List<DashboardActivity.Valve>) {
+    fun updateValves(newValves: List<Valve>) {
         valves = newValves
         notifyDataSetChanged()
     }

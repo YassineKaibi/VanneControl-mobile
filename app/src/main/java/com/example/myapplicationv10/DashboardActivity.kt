@@ -11,6 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import coil.transform.CircleCropTransformation
+import com.example.myapplicationv10.adapter.ActiveValvesAdapter
+import com.example.myapplicationv10.model.Valve
 import com.example.myapplicationv10.databinding.ActivityDashboardBinding
 import com.example.myapplicationv10.network.NetworkResult
 import com.example.myapplicationv10.repository.UserRepository
@@ -145,7 +147,7 @@ class DashboardActivity : BaseActivity() {
                     } else {
                         "Welcome!"
                     }
-                    binding.welcomeText.text = welcomeText
+                    binding.welcome.text = welcomeText
 
                     // Load avatar with Coil
                     binding.profileIcon.load(user.avatarUrl) {
@@ -244,9 +246,4 @@ class DashboardActivity : BaseActivity() {
         super.onDestroy()
         webSocketManager.disconnect()
     }
-
-    data class Valve(
-        val name: String,
-        val lastChanged: String
-    )
 }
