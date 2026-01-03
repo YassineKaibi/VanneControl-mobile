@@ -69,19 +69,19 @@ class ProfileActivity : BaseActivity() {
     }
 
     private fun setupTabNavigation() {
-        binding.accountTab.setOnClickListener {
-            binding.accountTab.setBackgroundResource(R.drawable.tab_selected_background)
-            binding.accountTab.setTextColor(getColor(R.color.white))
-            binding.settingsTab.setBackgroundResource(android.R.color.transparent)
-            binding.settingsTab.setTextColor(getColor(R.color.black))
+        binding.personalInfoTab.setOnClickListener {
+            binding.personalInfoTab.setBackgroundResource(R.drawable.tab_selected_background)
+            binding.personalInfoTab.setTextColor(getColor(R.color.white))
+            binding.teamsTab.setBackgroundResource(android.R.color.transparent)
+            binding.teamsTab.setTextColor(getColor(R.color.black))
         }
 
-        binding.settingsTab.setOnClickListener {
-            binding.settingsTab.setBackgroundResource(R.drawable.tab_selected_background)
-            binding.settingsTab.setTextColor(getColor(R.color.white))
-            binding.accountTab.setBackgroundResource(android.R.color.transparent)
-            binding.accountTab.setTextColor(getColor(R.color.black))
-            Snackbar.make(binding.root, "Settings coming soon", Snackbar.LENGTH_SHORT).show()
+        binding.teamsTab.setOnClickListener {
+            binding.teamsTab.setBackgroundResource(R.drawable.tab_selected_background)
+            binding.teamsTab.setTextColor(getColor(R.color.white))
+            binding.personalInfoTab.setBackgroundResource(android.R.color.transparent)
+            binding.personalInfoTab.setTextColor(getColor(R.color.black))
+            Snackbar.make(binding.root, "System settings coming soon", Snackbar.LENGTH_SHORT).show()
         }
     }
 
