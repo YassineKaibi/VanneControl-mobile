@@ -126,22 +126,41 @@ object Constants {
     private const val BASE_DOMAIN = "https://vannecontrol.swedencentral.cloudapp.azure.com"
 
     /**
-     * Fix avatar URLs returned by backend that use localhost
+     * Fix avatar URLs returned by backend
      *
-     * Backend sometimes returns: http://localhost:8080/avatars/...
-     * This fixes it to: https://vannecontrol.swedencentral.cloudapp.azure.com/avatars/...
+     * Handles multiple cases:
+     * - localhost URLs → production domain
+     * - HTTP URLs → HTTPS (for security)
+     * - Malformed URLs → null
      *
-     * @param url Avatar URL from backend (may be null or contain localhost)
-     * @return Fixed URL that's accessible from mobile devices, or null
+     * @param url Avatar URL from backend (may be null, contain localhost, or use HTTP)
+     * @return Fixed HTTPS URL accessible from mobile devices, or null
      */
     fun fixAvatarUrl(url: String?): String? {
         if (url.isNullOrEmpty()) return null
 
+        var fixedUrl = url
+
         // Replace localhost URLs with production domain
-        return url
+        fixedUrl = fixedUrl
             .replace("http://localhost:8080", BASE_DOMAIN)
             .replace("https://localhost:8080", BASE_DOMAIN)
             .replace("http://127.0.0.1:8080", BASE_DOMAIN)
             .replace("https://127.0.0.1:8080", BASE_DOMAIN)
+
+        // Ensure HTTPS for production domain (security requirement)
+        if (fixedUrl.startsWith("http://vannecontrol.swedencentral.cloudapp.azure.com")) {
+            fixedUrl = fixedUrl.replace(
+                "http://vannecontrol.swedencentral.cloudapp.azure.com",
+                "https://vannecontrol.swedencentral.cloudapp.azure.com"
+            )
+        }
+
+        // Validate URL format
+        return if (fixedUrl.startsWith("http://") || fixedUrl.startsWith("https://")) {
+            fixedUrl
+        } else {
+            null
+        }
     }
 }

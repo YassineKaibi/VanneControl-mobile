@@ -177,7 +177,7 @@ class EditProfileActivity : BaseActivity() {
     // ═══════════════════════════════════════════════════════════════
 
     /**
-     * Charger et afficher l'avatar avec Coil
+     * Charger et afficher l'avatar avec Coil (avec cache et logging)
      */
     private fun loadAvatar(url: String?) {
         binding.profilePicture.load(url) {
@@ -185,6 +185,18 @@ class EditProfileActivity : BaseActivity() {
             placeholder(R.drawable.ic_avatar_placeholder)
             error(R.drawable.ic_avatar_placeholder)
             transformations(CircleCropTransformation())
+            // Enable caching
+            memoryCacheKey(url)
+            diskCacheKey(url)
+            // Logging for debugging
+            listener(
+                onError = { _, result ->
+                    android.util.Log.e("EditProfileActivity", "Avatar load failed: ${result.throwable.message}")
+                },
+                onSuccess = { _, _ ->
+                    android.util.Log.d("EditProfileActivity", "Avatar loaded from: $url")
+                }
+            )
         }
     }
 
@@ -197,6 +209,12 @@ class EditProfileActivity : BaseActivity() {
             placeholder(R.drawable.ic_avatar_placeholder)
             error(R.drawable.ic_avatar_placeholder)
             transformations(CircleCropTransformation())
+            // Don't cache local Uris (they're temporary)
+            listener(
+                onSuccess = { _, _ ->
+                    android.util.Log.d("EditProfileActivity", "Preview loaded from Uri")
+                }
+            )
         }
     }
 
@@ -302,13 +320,17 @@ class EditProfileActivity : BaseActivity() {
 
     private fun uploadAvatar(uri: Uri) {
         showLoading("Uploading avatar...")
+        android.util.Log.d("EditProfileActivity", "Starting avatar upload from Uri: $uri")
 
         lifecycleScope.launch {
             when (val result = avatarRepository.uploadAvatar(uri)) {
                 is NetworkResult.Success -> {
                     hideLoading()
                     // Fix localhost URLs from backend
-                    currentAvatarUrl = Constants.fixAvatarUrl(result.data.avatarUrl)
+                    val rawUrl = result.data.avatarUrl
+                    currentAvatarUrl = Constants.fixAvatarUrl(rawUrl)
+
+                    android.util.Log.d("EditProfileActivity", "Upload success! Raw URL: $rawUrl, Fixed URL: $currentAvatarUrl")
 
                     Snackbar.make(
                         binding.root,
@@ -323,6 +345,8 @@ class EditProfileActivity : BaseActivity() {
                     hideLoading()
                     selectedAvatarUri = null
 
+                    android.util.Log.e("EditProfileActivity", "Upload failed: ${result.message}")
+
                     Snackbar.make(
                         binding.root,
                         "Upload failed: ${result.message}",
@@ -332,7 +356,9 @@ class EditProfileActivity : BaseActivity() {
                     // Revert to previous avatar
                     loadAvatar(currentAvatarUrl)
                 }
-                else -> {}
+                else -> {
+                    android.util.Log.d("EditProfileActivity", "Upload result: $result")
+                }
             }
         }
     }

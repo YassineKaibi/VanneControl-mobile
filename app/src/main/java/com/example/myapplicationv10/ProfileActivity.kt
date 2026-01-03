@@ -194,7 +194,7 @@ class ProfileActivity : BaseActivity() {
     }
 
     /**
-     * Load avatar image using Coil
+     * Load avatar image using Coil with caching and error handling
      */
     private fun loadAvatar(url: String?) {
         binding.profilePicture.load(url) {
@@ -202,6 +202,18 @@ class ProfileActivity : BaseActivity() {
             placeholder(R.drawable.ic_avatar_placeholder)
             error(R.drawable.ic_avatar_placeholder)
             transformations(CircleCropTransformation())
+            // Enable memory and disk caching
+            memoryCacheKey(url)
+            diskCacheKey(url)
+            // Listener for debugging (optional, remove in production)
+            listener(
+                onError = { _, result ->
+                    android.util.Log.e("ProfileActivity", "Avatar load failed: ${result.throwable.message}")
+                },
+                onSuccess = { _, _ ->
+                    android.util.Log.d("ProfileActivity", "Avatar loaded successfully from: $url")
+                }
+            )
         }
     }
 
