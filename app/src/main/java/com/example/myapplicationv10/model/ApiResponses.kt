@@ -68,6 +68,17 @@ data class ErrorResponse(
 )
 
 /**
+ * AvatarResponse - Réponse après upload ou suppression d'avatar
+ */
+data class AvatarResponse(
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("avatarUrl")
+    val avatarUrl: String? = null
+)
+
+/**
  * ScheduleResponse - Réponse contenant un planning
  */
 data class ScheduleResponse(
