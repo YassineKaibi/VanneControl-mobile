@@ -154,6 +154,7 @@
                             android:src="@drawable/ic_valve"
                             android:background="@android:color/transparent"
                             android:padding="8dp"
+                            app:tint="@color/green"
                             android:contentDescription="Valve Control" />
 
                         <LinearLayout
@@ -219,6 +220,7 @@
                             android:src="@drawable/timing_plan"
                             android:background="@android:color/transparent"
                             android:padding="8dp"
+                            app:tint="@color/green"
                             android:contentDescription="Timing Plan" />
 
                         <LinearLayout
