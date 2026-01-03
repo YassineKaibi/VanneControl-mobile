@@ -149,8 +149,8 @@ class DashboardActivity : BaseActivity() {
                     }
                     binding.welcome.text = welcomeText
 
-                    // Load avatar with Coil
-                    binding.profileIcon.load(user.avatarUrl) {
+                    // Load avatar with Coil (fix localhost URLs)
+                    binding.profileIcon.load(com.example.myapplicationv10.utils.Constants.fixAvatarUrl(user.avatarUrl)) {
                         crossfade(true)
                         placeholder(R.drawable.ic_avatar_placeholder)
                         error(R.drawable.ic_avatar_placeholder)
