@@ -13,16 +13,16 @@ object Constants {
      * Base URL de l'API backend
      *
      * IMPORTANT:
-     * - Pour développement local: "http://10.0.2.2:8080/" (émulateur Android)
-     * - Pour appareil physique: "http://YOUR_COMPUTER_IP:8080/"
-     * - Pour production: MUST use HTTPS: "https://your-domain.com/"
+     * - Pour développement local: "http://10.0.2.2:8080/api/" (émulateur Android)
+     * - Pour appareil physique: "http://YOUR_COMPUTER_IP:8080/api/"
+     * - Pour production: MUST use HTTPS: "https://your-domain.com/api/"
      *
      * NOTE: android:usesCleartextTraffic has been removed from AndroidManifest.xml
      * For development, you'll need to either:
      * 1. Use HTTPS with a self-signed certificate, OR
      * 2. Add network_security_config.xml to allow cleartext for development only
      */
-    const val BASE_URL = "https://vannecontrol.swedencentral.cloudapp.azure.com/"
+    const val BASE_URL = "https://vannecontrol.swedencentral.cloudapp.azure.com/api/"
 
     /**
      * Timeout pour les connexions réseau (en secondes)
@@ -87,6 +87,8 @@ object Constants {
      * IMPORTANT:
      * - Pour développement local: "ws://10.0.2.2:8080/ws"
      * - Pour production: Remplacer par URL WSS réelle
+     *
+     * NOTE: WebSocket endpoint may or may not need /api prefix - check backend routing
      */
     const val WEBSOCKET_URL = "wss://vannecontrol.swedencentral.cloudapp.azure.com/ws"
 
